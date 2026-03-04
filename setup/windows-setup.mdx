@@ -1,0 +1,96 @@
+---
+title: "Windows 11 Initial Setup"
+description: "Complete guide for setting up a fresh Windows 11 installation for development"
+---
+
+This guide walks you through setting up a fresh Windows 11 installation, including system updates, driver installation, and basic configuration.
+
+## Update Windows 11
+
+<Steps>
+  <Step title="Run Windows Update">
+    Open **Settings** > **Windows Update** and click **Check for updates**.
+    
+    Install all available updates.
+  </Step>
+  
+  <Step title="Update drivers">
+    Install and run **Driver Booster** to update all system drivers.
+    
+    <Note>
+      Driver Booster helps ensure all hardware drivers are up to date, which can improve system stability and performance.
+    </Note>
+  </Step>
+  
+  <Step title="Restart your PC">
+    After updates complete, restart your computer to apply changes.
+    
+    ```powershell
+    Restart-Computer
+    ```
+  </Step>
+  
+  <Step title="Check for remaining updates">
+    Repeat steps 1-3 to check for any remaining updates.
+    
+    <Note>
+      Sometimes updates unlock additional updates, so it's important to repeat this process until no more updates are available.
+    </Note>
+  </Step>
+</Steps>
+
+## Verify System Updates
+
+Check that all updates have been installed:
+
+```powershell
+# Check Windows Update status
+Get-WindowsUpdate -LastInstallation
+
+# Check Windows version
+winver
+```
+
+## Clean Up Pre-installed Apps
+
+<Steps>
+  <Step title="Uninstall unnecessary apps">
+    Open **Settings** > **Apps** > **Installed apps** and remove any pre-installed applications you don't need.
+    
+    <Warning>
+      Be careful not to uninstall system-critical applications. When in doubt, leave the app installed.
+    </Warning>
+  </Step>
+  
+  <Step title="Update Microsoft Store apps">
+    Open the **Microsoft Store**, click on **Library**, and update all installed apps.
+    
+    ```powershell
+    # Verify Microsoft Store is working
+    winget source update
+    ```
+  </Step>
+</Steps>
+
+## Verify Installation
+
+Confirm your system is ready:
+
+```powershell
+# Check Windows version
+systeminfo | Select-String "OS Name", "OS Version"
+
+# Verify winget is available
+winget --version
+```
+
+<Note>
+  Winget comes pre-installed on Windows 11 and is essential for installing development tools in the next steps.
+</Note>
+
+## Next Steps
+
+Once your Windows 11 system is updated and clean:
+
+- Install [development tools](/setup/development-tools)
+- Configure [PowerShell modules](/setup/powershell-installation)

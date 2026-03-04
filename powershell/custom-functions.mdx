@@ -1,0 +1,688 @@
+---
+title: Custom Functions
+description: Detailed documentation for all custom PowerShell functions
+---
+
+## File Operations
+
+### mkcd
+
+Create a directory and navigate into it in one command.
+
+```powershell
+mkcd my-project
+# Creates ~/my-project and sets location to it
+```
+
+<ParamField path="Path" type="string" required>
+  The directory path to create and navigate to
+</ParamField>
+
+#### Implementation
+
+```powershell Source: functions/mkcd.ps1
+function mkcd {
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Path
+    )
+    
+    New-Item -ItemType Directory -Path $Path -Force | Out-Null
+    Set-Location -Path $Path
+}
+```
+
+---
+
+### Backup-Item
+
+Create timestamped backups of files or directories.
+
+**Aliases:** `backup`, `bak`
+
+```powershell
+backup config.json
+# Creates: config_2026-03-04_143022.json
+
+backup myproject
+# Creates: myproject_2026-03-04_143022/ (directory)
+
+backup config.json -Destination D:\Backups
+# Creates backup in specified location
+```
+
+<ParamField path="Path" type="string" required>
+  Path to the file or directory to back up
+</ParamField>
+
+<ParamField path="Destination" type="string">
+  Optional destination directory for the backup (defaults to same directory as source)
+</ParamField>
+
+#### Features
+
+- Handles both files and directories
+- Preserves file extensions
+- Handles dotfiles correctly (e.g., `.gitignore`)
+- Creates destination directory if needed
+- Returns backup path for scripting
+
+#### Implementation
+
+```powershell Source: functions/backup.ps1
+function Backup-Item {
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Path,
+        
+        [Parameter(Position=1)]
+        [string]$Destination
+    )
+    
+    if (!(Test-Path $Path)) {
+        Write-Error "Path not found: $Path"
+        return
+    }
+    
+    $item = Get-Item $Path
+    $timestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
+    
+    if ($item.PSIsContainer) {
+        # Directory backup
+        $backupName = "$($item.Name)_$timestamp"
+        
+        if ($Destination) {
+            if (!(Test-Path $Destination)) {
+                New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+            }
+            $backupPath = Join-Path $Destination $backupName
+        } else {
+            $backupPath = Join-Path $item.Parent.FullName $backupName
+        }
+        
+        Copy-Item -Path $Path -Destination $backupPath -Recurse -Force
+        Write-Host "Created backup: " -NoNewline -ForegroundColor Green
+        Write-Host $backupPath -ForegroundColor Cyan
+    } else {
+        # File backup
+        $fileName = $item.Name
+        $baseName = [System.IO.Path]::GetFileNameWithoutExtension($fileName)
+        $extension = [System.IO.Path]::GetExtension($fileName)
+        
+        # Handle dotfiles
+        if ([string]::IsNullOrEmpty($baseName) -and $fileName.StartsWith('.')) {
+            $baseName = $fileName
+            $extension = ""
+        }
+        
+        $backupName = "${baseName}_${timestamp}${extension}"
+        
+        if ($Destination) {
+            if (!(Test-Path $Destination)) {
+                New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+            }
+            $backupPath = Join-Path $Destination $backupName
+        } else {
+            $backupPath = Join-Path $item.DirectoryName $backupName
+        }
+        
+        Copy-Item -Path $Path -Destination $backupPath -Force
+        Write-Host "Created backup: " -NoNewline -ForegroundColor Green
+        Write-Host $backupPath -ForegroundColor Cyan
+    }
+    
+    return $backupPath
+}
+
+Set-Alias -Name backup -Value Backup-Item
+Set-Alias -Name bak -Value Backup-Item
+```
+
+---
+
+### Extract-Archive
+
+Extract various archive formats with a single command.
+
+**Aliases:** `extract`, `unpack`
+
+```powershell
+extract myfile.zip
+extract archive.tar.gz
+extract package.7z
+```
+
+<ParamField path="Path" type="string" required>
+  Path to the archive file to extract
+</ParamField>
+
+#### Supported Formats
+
+- `.zip` - Using built-in `Expand-Archive`
+- `.tar.gz`, `.tgz` - Using tar command
+- `.tar.bz2`, `.tbz2` - Using tar command
+- `.tar.xz`, `.txz` - Using tar command
+- `.tar` - Using tar command
+- `.7z` - Using 7z command
+- `.rar` - Using unrar or 7z
+
+#### Implementation
+
+```powershell Source: functions/archive.ps1
+function Extract-Archive {
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Path
+    )
+    
+    if (!(Test-Path $Path)) {
+        Write-Error "File not found: $Path"
+        return
+    }
+    
+    $extension = [System.IO.Path]::GetExtension($Path).ToLower()
+    $baseName = [System.IO.Path]::GetFileNameWithoutExtension($Path)
+    
+    # Handle double extensions like .tar.gz
+    if ($Path -match '\.(tar\.(gz|bz2|xz|zst))$') {
+        $extension = $Matches[0]
+        $baseName = $Path -replace [regex]::Escape($extension), ''
+    }
+    
+    switch -Regex ($extension) {
+        '\.zip$' {
+            Expand-Archive -Path $Path -DestinationPath $baseName -Force
+        }
+        '\.tar\.gz$|\.tgz$' {
+            if (Get-Command tar -ErrorAction SilentlyContinue) {
+                tar -xzf $Path
+            } else {
+                Write-Error "tar command not found"
+            }
+        }
+        '\.tar\.bz2$|\.tbz2?$' {
+            if (Get-Command tar -ErrorAction SilentlyContinue) {
+                tar -xjf $Path
+            } else {
+                Write-Error "tar command not found"
+            }
+        }
+        '\.tar\.xz$|\.txz$' {
+            if (Get-Command tar -ErrorAction SilentlyContinue) {
+                tar -xJf $Path
+            } else {
+                Write-Error "tar command not found"
+            }
+        }
+        '\.tar$' {
+            if (Get-Command tar -ErrorAction SilentlyContinue) {
+                tar -xf $Path
+            } else {
+                Write-Error "tar command not found"
+            }
+        }
+        '\.7z$' {
+            if (Get-Command 7z -ErrorAction SilentlyContinue) {
+                7z x $Path
+            } else {
+                Write-Error "7z command not found. Install with: scoop install 7zip"
+            }
+        }
+        '\.rar$' {
+            if (Get-Command unrar -ErrorAction SilentlyContinue) {
+                unrar x $Path
+            } elseif (Get-Command 7z -ErrorAction SilentlyContinue) {
+                7z x $Path
+            } else {
+                Write-Error "unrar or 7z command not found"
+            }
+        }
+        default {
+            Write-Error "Unknown archive format: $extension"
+        }
+    }
+}
+
+Set-Alias -Name extract -Value Extract-Archive
+Set-Alias -Name unpack -Value Extract-Archive
+```
+
+---
+
+## Search & Editor Integration
+
+### rfv
+
+Search file content with ripgrep, select with fzf, and open in your editor.
+
+```powershell
+rfv "function"
+# Search for "function" in all files, select result, open in $env:EDITOR
+
+rfv "TODO" --type py
+# Search only in Python files
+
+rfv "error" -i
+# Case-insensitive search
+```
+
+<ParamField path="SearchArgs" type="string[]">
+  Arguments passed to ripgrep (query, flags, file types, etc.)
+</ParamField>
+
+#### Features
+
+- Uses ripgrep for fast searching
+- Interactive selection with fzf
+- Live preview with bat
+- Opens file at exact line in your editor
+- Supports nvim, vim, code, cursor, zed
+
+#### Requirements
+
+- `rg` (ripgrep)
+- `fzf`
+- `bat` (for preview)
+- `$env:EDITOR` set to supported editor
+
+#### Implementation
+
+```powershell Source: functions/rfv.ps1
+function rfv {
+    param(
+        [Parameter(Position=0, ValueFromRemainingArguments)]
+        [string[]]$SearchArgs
+    )
+    
+    if (!(Get-Command rg -ErrorAction SilentlyContinue)) {
+        Write-Error "rfv requires ripgrep (rg)"
+        return
+    }
+    if (!(Get-Command fzf -ErrorAction SilentlyContinue)) {
+        Write-Error "rfv requires fzf"
+        return
+    }
+    
+    $selection = rg --column --line-number --no-heading --color=always --smart-case @SearchArgs |
+        fzf --ansi --delimiter ':' `
+            --preview 'bat --style=numbers --color=always --highlight-line {2} {1} 2>$null' `
+            --preview-window 'up,60%,border-bottom,+{2}+3/3'
+    
+    if ($selection) {
+        $parts = $selection -split ':'
+        $file = $parts[0]
+        $line = $parts[1]
+        
+        # Open in editor at specific line
+        $editor = $env:EDITOR
+        switch -Regex ($editor) {
+            'nvim|vim' { & $editor "+$line" $file }
+            'code|cursor' { & $editor --goto "${file}:${line}" }
+            'zed' { & $editor "${file}:${line}" }
+            default { & $editor $file }
+        }
+    }
+}
+```
+
+---
+
+## JSON Processing
+
+### jqc
+
+Parse JSON from clipboard using jq.
+
+```powershell
+jqc .
+# Pretty print JSON from clipboard
+
+jqc '.name'
+# Extract name field
+
+jqc -r '.id'
+# Raw output (no quotes)
+
+jqc '.items[] | .title'
+# Extract titles from array
+```
+
+<ParamField path="JqArgs" type="string[]">
+  Arguments passed to jq (filter expressions, flags, etc.)
+</ParamField>
+
+#### Requirements
+
+- `jq` command-line JSON processor
+
+#### Implementation
+
+```powershell Source: functions/jqc.ps1
+function jqc {
+    param(
+        [Parameter(Position=0, ValueFromRemainingArguments)]
+        [string[]]$JqArgs
+    )
+    
+    if (!(Get-Command jq -ErrorAction SilentlyContinue)) {
+        Write-Error "jqc requires jq"
+        return
+    }
+    
+    Get-Clipboard | jq @JqArgs
+}
+```
+
+---
+
+## Navigation
+
+Quick directory navigation shortcuts.
+
+### Home & Common Folders
+
+```powershell
+~        # Navigate to home directory
+desk     # Navigate to Desktop
+docs     # Navigate to Documents
+dl       # Navigate to Downloads
+```
+
+### Development Folders
+
+```powershell
+dev       # Navigate to ~/dev
+conf      # Navigate to ~/.config
+dotfiles  # Navigate to ~/.config
+```
+
+### Parent Directory Navigation
+
+```powershell
+..     # Go up one level
+...    # Go up two levels
+....   # Go up three levels
+```
+
+### Previous Directory
+
+```powershell
+-      # Return to previous directory (like `cd -` in bash)
+```
+
+#### Implementation
+
+```powershell Source: functions/navigation.ps1
+# Home shortcut
+function ~ { Set-Location $HOME }
+
+# Quick folder jumps
+function desk { Set-Location "$HOME\Desktop" }
+function docs { Set-Location "$HOME\Documents" }
+function dl { Set-Location "$HOME\Downloads" }
+
+# Dev folder shortcut
+function dev { Set-Location "$HOME\dev" }
+
+# Config folder shortcut
+function conf { Set-Location "$HOME\.config" }
+function dotfiles { Set-Location "$HOME\.config" }
+
+# Parent directory shortcuts
+function .. { Set-Location .. }
+function ... { Set-Location ..\.. }
+function .... { Set-Location ..\..\.. }
+
+# Back to previous directory
+$Global:OLDPWD = $null
+
+function - { 
+    if ($Global:OLDPWD) { 
+        Set-Location $Global:OLDPWD 
+    } else {
+        Write-Warning "No previous directory"
+    }
+}
+```
+
+---
+
+## Shell Management
+
+### Reload-Profile
+
+Reload PowerShell profile without restarting the shell.
+
+**Alias:** `reload`
+
+```powershell
+reload
+# Reloads $PROFILE, applying all configuration changes
+```
+
+#### Use Cases
+
+- After editing profile configuration
+- After adding new functions
+- After modifying aliases or environment variables
+
+#### Implementation
+
+```powershell Source: functions/reload.ps1
+function Reload-Profile {
+    Write-Host "Reloading PowerShell profile..." -ForegroundColor Cyan
+    . $PROFILE
+    Write-Host "Profile reloaded!" -ForegroundColor Green
+}
+
+Set-Alias -Name reload -Value Reload-Profile
+```
+
+---
+
+### Restart-Shell
+
+Restart PowerShell with a fresh process.
+
+**Alias:** `restart`
+
+```powershell
+restart
+# Starts new PowerShell process and exits current one
+```
+
+#### Features
+
+- Preserves current working directory
+- Opens new shell in same location
+- Useful when `reload` isn't sufficient (module conflicts, path changes, etc.)
+
+#### Implementation
+
+```powershell Source: functions/reload.ps1
+function Restart-Shell {
+    Write-Host "Restarting PowerShell..." -ForegroundColor Cyan
+    
+    # Get current working directory
+    $cwd = Get-Location
+    
+    # Start new PowerShell process
+    Start-Process pwsh -ArgumentList "-NoExit", "-Command", "Set-Location '$cwd'"
+    
+    # Exit current process
+    exit
+}
+
+Set-Alias -Name restart -Value Restart-Shell
+```
+
+---
+
+## WSL Integration
+
+### wsl-here
+
+Open current Windows directory in WSL.
+
+```powershell
+cd C:\Users\me\projects\myapp
+wsl-here
+# Opens WSL at /mnt/c/Users/me/projects/myapp
+```
+
+#### Implementation
+
+```powershell Source: functions/wsl-helpers.ps1
+function wsl-here {
+    $wslPath = (Get-Location).Path -replace '\\', '/' -replace '^(\w):', { '/mnt/' + $_.Groups[1].Value.ToLower() }
+    wsl.exe --cd $wslPath
+}
+```
+
+---
+
+### Copy-ToWSL
+
+Copy file from Windows to WSL.
+
+```powershell
+Copy-ToWSL myfile.txt
+# Copies to WSL home directory
+
+Copy-ToWSL myfile.txt ~/projects/
+# Copies to specific WSL path
+```
+
+<ParamField path="Source" type="string" required>
+  Windows file path to copy
+</ParamField>
+
+<ParamField path="Destination" type="string">
+  WSL destination path (defaults to `~/`)
+</ParamField>
+
+#### Implementation
+
+```powershell Source: functions/wsl-helpers.ps1
+function Copy-ToWSL {
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Source,
+        
+        [Parameter(Position=1)]
+        [string]$Destination = "~/"
+    )
+    
+    $wslSource = (Resolve-Path $Source).Path -replace '\\', '/' -replace '^(\w):', { '/mnt/' + $_.Groups[1].Value.ToLower() }
+    wsl.exe cp "$wslSource" "$Destination"
+}
+```
+
+---
+
+### Copy-FromWSL
+
+Copy file from WSL to Windows.
+
+```powershell
+Copy-FromWSL ~/myfile.txt
+# Copies to current Windows directory
+
+Copy-FromWSL ~/myfile.txt C:\Users\me\Desktop\
+# Copies to specific Windows path
+```
+
+<ParamField path="Source" type="string" required>
+  WSL file path to copy
+</ParamField>
+
+<ParamField path="Destination" type="string">
+  Windows destination path (defaults to current directory)
+</ParamField>
+
+#### Implementation
+
+```powershell Source: functions/wsl-helpers.ps1
+function Copy-FromWSL {
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Source,
+        
+        [Parameter(Position=1)]
+        [string]$Destination = "."
+    )
+    
+    $winDest = (Resolve-Path $Destination).Path -replace '\\', '/' -replace '^(\w):', { '/mnt/' + $_.Groups[1].Value.ToLower() }
+    wsl.exe cp "$Source" "$winDest"
+}
+```
+
+---
+
+### Invoke-WSL
+
+Run a command in WSL and return to PowerShell.
+
+**Alias:** `wslrun`
+
+```powershell
+wslrun 'ls -la'
+# Runs ls -la in WSL, output in PowerShell
+
+wslrun 'cat ~/.bashrc'
+# View WSL bash configuration
+
+wslrun 'docker ps'
+# Check Docker containers in WSL
+```
+
+<ParamField path="Command" type="string[]" required>
+  Command to execute in WSL bash
+</ParamField>
+
+#### Implementation
+
+```powershell Source: functions/wsl-helpers.ps1
+function Invoke-WSL {
+    param(
+        [Parameter(Mandatory=$true, Position=0, ValueFromRemainingArguments)]
+        [string[]]$Command
+    )
+    
+    wsl.exe -e bash -c ($Command -join ' ')
+}
+Set-Alias -Name wslrun -Value Invoke-WSL
+```
+
+---
+
+## System Information
+
+### Show-Greeting
+
+Display system information at shell startup using fastfetch.
+
+```powershell
+Show-Greeting
+# Shows system info, OS, kernel, CPU, memory, etc.
+```
+
+#### Implementation
+
+```powershell Source: functions/greeting.ps1
+function Show-Greeting {
+    if (Get-Command fastfetch -ErrorAction SilentlyContinue) {
+        fastfetch
+    }
+}
+```
+
+This function is automatically invoked when PowerShell starts (via `50-functions.ps1`).
+
+---
+
+## See Also
+
+- [Functions](/powershell/functions) - Function loading system overview
+- [Aliases](/powershell/aliases) - Command shortcuts
+- [Profile Structure](/powershell/profile-structure) - Configuration architecture

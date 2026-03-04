@@ -1,0 +1,225 @@
+---
+title: Functions
+description: Overview of the custom function loading system
+---
+
+## Overview
+
+Custom functions are stored in individual files under `~/.config/powershell/functions/` and automatically loaded by the `50-functions.ps1` module.
+
+## Function Directory Structure
+
+```
+~/.config/powershell/functions/
+├── archive.ps1        # Extract archives
+├── backup.ps1         # Create timestamped backups
+├── greeting.ps1       # Display system info on startup
+├── jqc.ps1           # Parse JSON from clipboard
+├── mkcd.ps1          # Make directory and cd into it
+├── navigation.ps1    # Quick directory navigation
+├── reload.ps1        # Reload/restart PowerShell
+├── rfv.ps1           # Ripgrep + fzf + editor integration
+└── wsl-helpers.ps1   # WSL integration functions
+```
+
+## Loading Mechanism
+
+The `50-functions.ps1` module automatically sources all `.ps1` files in the functions directory:
+
+```powershell Source: conf.d/50-functions.ps1
+$functionsDir = "$HOME\.config\powershell\functions"
+
+if (Test-Path $functionsDir) {
+    Get-ChildItem -Path $functionsDir -Filter "*.ps1" | 
+        ForEach-Object { 
+            . $_.FullName 
+        }
+}
+
+# Invoke greeting if available
+if (Get-Command Show-Greeting -ErrorAction SilentlyContinue) {
+    Show-Greeting
+}
+```
+
+## How It Works
+
+<Steps>
+  <Step title="Discovery">
+    Scans `~/.config/powershell/functions/` for all `.ps1` files
+  </Step>
+  
+  <Step title="Loading">
+    Dot-sources each file to load functions into the current session
+  </Step>
+  
+  <Step title="Availability">
+    Functions become immediately available in your PowerShell session
+  </Step>
+  
+  <Step title="Greeting">
+    Optionally invokes `Show-Greeting` to display system info at startup
+  </Step>
+</Steps>
+
+## Function Categories
+
+### File Operations
+
+- **mkcd** - Create directory and navigate into it
+- **backup** / **bak** - Create timestamped backups
+- **extract** / **unpack** - Extract various archive formats
+
+### Search & Navigation
+
+- **rfv** - Ripgrep + fzf + editor integration for code search
+- **~**, **desk**, **docs**, **dl**, **dev**, **conf** - Quick directory jumps
+- **.**, **...**, **....** - Parent directory navigation
+- **-** - Return to previous directory
+
+### JSON Processing
+
+- **jqc** - Parse JSON from clipboard with jq
+
+### Shell Management
+
+- **reload** - Reload PowerShell profile without restarting
+- **restart** - Restart PowerShell with fresh process
+
+### WSL Integration
+
+- **wsl-here** - Open current Windows directory in WSL
+- **Copy-ToWSL** - Copy files from Windows to WSL
+- **Copy-FromWSL** - Copy files from WSL to Windows
+- **wslrun** - Execute commands in WSL
+
+## Adding New Functions
+
+To add a new custom function:
+
+1. Create a new `.ps1` file in `~/.config/powershell/functions/`
+2. Define your function with proper documentation
+3. Optionally add aliases for convenience
+4. Reload your profile or restart PowerShell
+
+### Function Template
+
+```powershell Example: my-function.ps1
+function My-CustomFunction {
+    <#
+    .SYNOPSIS
+    Brief description of what the function does
+    
+    .DESCRIPTION
+    More detailed description if needed
+    
+    .EXAMPLE
+    My-CustomFunction -Param1 "value"
+    Description of what this example does
+    
+    .EXAMPLE
+    mycmd "value"  # Using alias
+    Another example
+    #>
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Param1,
+        
+        [Parameter(Position=1)]
+        [string]$Param2 = "default"
+    )
+    
+    # Function implementation
+    Write-Host "Processing: $Param1"
+}
+
+# Optional: Add convenient alias
+Set-Alias -Name mycmd -Value My-CustomFunction
+```
+
+## Function Organization Strategies
+
+### Single Purpose Files
+
+Most functions are in their own file for clarity:
+
+```
+mkcd.ps1    → mkcd function
+backup.ps1  → Backup-Item function + aliases
+jqc.ps1     → jqc function
+```
+
+### Grouped Functions
+
+Related functions can be grouped in one file:
+
+```powershell navigation.ps1 contains
+~, desk, docs, dl, dev, conf  # Quick jumps
+.., ..., ....                 # Parent navigation
+-                             # Previous directory
+```
+
+```powershell wsl-helpers.ps1 contains
+Enter-WSL, wsl-here           # WSL access
+Copy-ToWSL, Copy-FromWSL      # File copying
+Invoke-WSL                    # Command execution
+```
+
+## Function Discovery
+
+To see all loaded custom functions:
+
+```powershell
+Get-Command -CommandType Function | Where-Object Source -eq ''
+```
+
+To view function definition:
+
+```powershell
+Get-Content function:mkcd
+```
+
+To get help for a function:
+
+```powershell
+Get-Help Backup-Item -Full
+```
+
+## Load Order Considerations
+
+Functions are loaded:
+- After environment setup (10-environment.ps1)
+- After aliases (20-aliases.ps1)
+- After tool integrations (30-tools.ps1)
+- Before prompt configuration (60-prompt.ps1)
+
+This ensures functions can:
+- Use environment variables like `$env:EDITOR`
+- Reference tools configured in earlier modules
+- Access modern CLI tools (bat, fzf, ripgrep, etc.)
+
+## Benefits
+
+<CardGroup cols={2}>
+  <Card title="Modular" icon="puzzle-piece">
+    Each function in its own file, easy to add/remove/modify
+  </Card>
+  
+  <Card title="Automatic" icon="bolt">
+    New functions are auto-loaded, no manual registration
+  </Card>
+  
+  <Card title="Documented" icon="book">
+    Functions use PowerShell's built-in help system
+  </Card>
+  
+  <Card title="Portable" icon="box">
+    Entire functions directory can be synced across machines
+  </Card>
+</CardGroup>
+
+## See Also
+
+- [Custom Functions](/powershell/custom-functions) - Detailed documentation for each function
+- [Profile Structure](/powershell/profile-structure) - How the module system works
+- [Aliases](/powershell/aliases) - Command shortcuts and abbreviations

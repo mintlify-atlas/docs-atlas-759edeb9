@@ -1,0 +1,422 @@
+---
+title: Vesper Theme
+description: Complete color palette and theme configuration for terminals, editors, and CLI tools
+---
+
+Vesper is a warm, dark color scheme optimized for long coding sessions. It uses muted oranges, golds, and greens with high contrast text on a deep charcoal background.
+
+## Color Palette
+
+### Core Colors
+
+| Name | Hex | RGB | Preview | Usage |
+|------|-----|-----|---------|-------|
+| Background | `#101010` | `16, 16, 16` | <ColorSwatch color="#101010" /> | Terminal/editor background |
+| Foreground | `#FFFFFF` | `255, 255, 255` | <ColorSwatch color="#FFFFFF" /> | Default text |
+| Foreground Alt | `#B7B7B7` | `183, 183, 183` | <ColorSwatch color="#B7B7B7" /> | Secondary text |
+| Selection | `#232323` | `35, 35, 35` | <ColorSwatch color="#232323" /> | Selected text background |
+| Comment | `#505050` | `80, 80, 80` | <ColorSwatch color="#505050" /> | Comments, muted text |
+| Cursor | `#FFC799` | `255, 199, 153` | <ColorSwatch color="#FFC799" /> | Cursor, primary accent |
+
+### Accent Colors
+
+| Name | Hex | RGB | Preview | Usage |
+|------|-----|-----|---------|-------|
+| Orange | `#FFC799` | `255, 199, 153` | <ColorSwatch color="#FFC799" /> | Keywords, numbers, accents |
+| Gold | `#FFCFA8` | `255, 207, 168` | <ColorSwatch color="#FFCFA8" /> | Classes, types, highlights |
+| Cyan | `#99FFE4` | `153, 255, 228` | <ColorSwatch color="#99FFE4" /> | Strings, success |
+| Green | `#90B99F` | `144, 185, 159` | <ColorSwatch color="#90B99F" /> | Git additions, success |
+| Yellow | `#E6B99D` | `230, 185, 157` | <ColorSwatch color="#E6B99D" /> | Warnings |
+| Red | `#F5A191` | `245, 161, 145` | <ColorSwatch color="#F5A191" /> | Errors, deletions |
+| Purple | `#ACA1CF` | `172, 161, 207` | <ColorSwatch color="#ACA1CF" /> | Functions, methods |
+| Magenta | `#E29ECA` | `226, 158, 202` | <ColorSwatch color="#E29ECA" /> | Special keywords |
+
+### ANSI Colors
+
+<Tabs>
+  <Tab title="Standard">
+    | Name | Hex | Usage |
+    |------|-----|-------|
+    | Black | `#101010` | Background |
+    | Red | `#F5A191` | Errors |
+    | Green | `#90B99F` | Success |
+    | Yellow | `#E6B99D` | Warnings |
+    | Blue | `#ACA1CF` | Information |
+    | Magenta | `#E29ECA` | Special |
+    | Cyan | `#EA83A5` | Highlights |
+    | White | `#A0A0A0` | Normal text |
+  </Tab>
+  
+  <Tab title="Bright">
+    | Name | Hex | Usage |
+    |------|-----|-------|
+    | Bright Black | `#7E7E7E` | Comments |
+    | Bright Red | `#FF8080` | Bold errors |
+    | Bright Green | `#99FFE4` | Strings |
+    | Bright Yellow | `#FFC799` | Keywords |
+    | Bright Blue | `#B9AEDA` | Functions |
+    | Bright Magenta | `#ECAAD6` | Constants |
+    | Bright Cyan | `#F591B2` | Types |
+    | Bright White | `#FFFFFF` | Emphasis |
+  </Tab>
+</Tabs>
+
+## Terminal Configuration
+
+### WezTerm
+
+Complete WezTerm configuration with Vesper theme:
+
+```lua
+local wezterm = require 'wezterm'
+local config = {}
+
+config.color_scheme = 'Vesper'
+
+config.color_schemes = {
+  ['Vesper'] = {
+    foreground = '#FFFFFF',
+    background = '#101010',
+    cursor_bg = '#FFC799',
+    cursor_fg = '#101010',
+    cursor_border = '#FFC799',
+    selection_bg = 'rgba(50% 50% 50% 50%)',
+    scrollbar_thumb = 'rgba(50% 50% 50% 50%)',
+    split = '#505050',
+    
+    ansi = {
+      '#101010', '#F5A191', '#90B99F', '#E6B99D',
+      '#ACA1CF', '#E29ECA', '#EA83A5', '#A0A0A0',
+    },
+    brights = {
+      '#7E7E7E', '#FF8080', '#99FFE4', '#FFC799',
+      '#B9AEDA', '#ECAAD6', '#F591B2', '#FFFFFF',
+    },
+  }
+}
+
+return config
+```
+
+See [WezTerm Configuration](/configuration/wezterm) for complete setup.
+
+### Windows Terminal
+
+Add to Windows Terminal `settings.json`:
+
+```json
+{
+  "name": "Vesper",
+  "background": "#101010",
+  "foreground": "#B0B0B0",
+  "cursorColor": "#FFC799",
+  "selectionBackground": "#232323",
+  "black": "#101010",
+  "brightBlack": "#505050",
+  "red": "#F5A191",
+  "brightRed": "#F5A191",
+  "green": "#90B99F",
+  "brightGreen": "#90B99F",
+  "yellow": "#E6B99D",
+  "brightYellow": "#FFCFA8",
+  "blue": "#99B4D1",
+  "brightBlue": "#99B4D1",
+  "purple": "#D4A5A5",
+  "brightPurple": "#D4A5A5",
+  "cyan": "#A5B6C7",
+  "brightCyan": "#A5B6C7",
+  "white": "#B0B0B0",
+  "brightWhite": "#FFFFFF"
+}
+```
+
+## CLI Tool Themes
+
+### FZF Colors
+
+Fuzzy finder with Vesper colors:
+
+```powershell
+$env:FZF_DEFAULT_OPTS = @"
+--color=bg+:-1,bg:-1,spinner:#FFC799,hl:#FFC799
+--color=fg:#b0b0b0,header:#505050,info:#FFCFA8,pointer:#FFC799
+--color=marker:#FFC799,fg+:#ffffff,prompt:#FFC799,hl+:#FFCFA8
+--height 50%
+--layout reverse
+--border rounded
+"@
+```
+
+### Bat Theme
+
+The Vesper bat theme is defined in `~/.config/bat/themes/Vesper.tmTheme`:
+
+<Accordion title="Vesper.tmTheme structure">
+  Key color definitions:
+  
+  - **Background**: `#101010`
+  - **Foreground**: `#B7B7B7`
+  - **Caret**: `#FFC799`
+  - **Selection**: `#232323`
+  - **Comments**: `#505050` (italic)
+  - **Strings**: `#99FFE4`
+  - **Numbers**: `#FFC799`
+  - **Keywords**: `#FFC799`
+  - **Functions**: `#FFFFFF`
+  - **Classes**: `#FFCFA8`
+</Accordion>
+
+Rebuild bat cache after adding:
+
+```powershell
+bat cache --build
+```
+
+### PSReadLine Colors
+
+PowerShell command-line colors:
+
+```powershell
+Set-PSReadLineOption -Colors @{
+    InlinePrediction = '#505050'
+    Command = '#FFC799'
+    Parameter = '#FFCFA8'
+    Operator = '#B7B7B7'
+    Variable = '#99FFE4'
+    String = '#99FFE4'
+    Number = '#FFC799'
+    Type = '#FFCFA8'
+    Comment = '#505050'
+}
+```
+
+### Delta (Git Diff)
+
+Add to `~/.gitconfig`:
+
+```ini
+[delta "vesper"]
+    syntax-theme = base16
+    file-style = "#FFC799 bold"
+    file-decoration-style = "#FFC799 ul"
+    hunk-header-style = "#FFCFA8 bold"
+    hunk-header-decoration-style = "#505050"
+    line-numbers-zero-style = "#505050"
+    line-numbers-minus-style = "#F5A191"
+    line-numbers-plus-style = "#90B99F"
+    minus-style = "#F5A191"
+    plus-style = "#90B99F"
+
+[delta]
+    features = vesper
+```
+
+## Syntax Highlighting
+
+### Token Colors
+
+| Token Type | Color | Hex | Example |
+|------------|-------|-----|----------|
+| Comment | Gray | `#505050` | `# This is a comment` |
+| String | Cyan | `#99FFE4` | `"Hello World"` |
+| Number | Orange | `#FFC799` | `42`, `3.14` |
+| Keyword | Orange | `#FFC799` | `if`, `function`, `return` |
+| Function | White | `#FFFFFF` | `myFunction()` |
+| Class | Gold | `#FFCFA8` | `MyClass` |
+| Variable | Light Gray | `#B7B7B7` | `$myVariable` |
+| Operator | Light Gray | `#B7B7B7` | `+`, `-`, `=` |
+| Type | Gold | `#FFCFA8` | `String`, `Int` |
+| Constant | Orange | `#FFC799` | `TRUE`, `NULL` |
+
+### Language-Specific Examples
+
+<Tabs>
+  <Tab title="PowerShell">
+    ```powershell
+    # Comment - #505050
+    function Get-Example {  # 'function' - #FFC799, 'Get-Example' - #FFFFFF
+        param(
+            [string]$Name  # '[string]' - #FFCFA8, '$Name' - #99FFE4
+        )
+        
+        $count = 42  # '$count' - #B7B7B7, '42' - #FFC799
+        Write-Host "Hello $Name"  # 'Write-Host' - #FFFFFF, string - #99FFE4
+    }
+    ```
+  </Tab>
+  
+  <Tab title="JavaScript">
+    ```javascript
+    // Comment - #505050
+    function fetchData(url) {  // 'function' - #FFC799, 'fetchData' - #FFFFFF
+        const timeout = 5000;  // 'const' - #FFC799, '5000' - #FFC799
+        const data = "example";  // string - #99FFE4
+        
+        return fetch(url)  // 'return' - #FFC799
+            .then(response => response.json());  // 'then' - #FFFFFF
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Python">
+    ```python
+    # Comment - #505050
+    def calculate_total(items):  # 'def' - #FFC799, 'calculate_total' - #FFFFFF
+        """Docstring"""  # docstring - #99FFE4
+        total = 0  # 'total' - #B7B7B7, '0' - #FFC799
+        
+        for item in items:  # 'for', 'in' - #FFC799
+            total += item.price
+        
+        return total  # 'return' - #FFC799
+    ```
+  </Tab>
+</Tabs>
+
+## Oh My Posh Colors
+
+Recommended colors for Oh My Posh segments:
+
+```json
+{
+  "segments": [
+    {
+      "type": "path",
+      "foreground": "#101010",
+      "background": "#FFC799"
+    },
+    {
+      "type": "git",
+      "foreground": "#FFFFFF",
+      "background": "#90B99F"
+    },
+    {
+      "type": "exit",
+      "foreground": "#F5A191"
+    },
+    {
+      "type": "executiontime",
+      "foreground": "#FFCFA8"
+    }
+  ]
+}
+```
+
+See [Oh My Posh Configuration](/configuration/oh-my-posh#vesper-theme-colors) for details.
+
+## Design Philosophy
+
+### Readability First
+
+Vesper prioritizes long-term readability:
+
+- **High contrast** (`#FFFFFF` on `#101010`) for main text
+- **Muted accents** to reduce eye strain
+- **Warm palette** for comfortable extended use
+- **Consistent semantics** (errors always red, success always green)
+
+### Color Psychology
+
+| Color | Meaning | Usage |
+|-------|---------|-------|
+| Orange (`#FFC799`) | Action, emphasis | Keywords, cursors, primary UI |
+| Green (`#90B99F`) | Success, addition | Git additions, successful operations |
+| Red (`#F5A191`) | Error, deletion | Errors, git deletions, warnings |
+| Cyan (`#99FFE4`) | Data, strings | String literals, data values |
+| Purple (`#ACA1CF`) | Functions | Callable entities |
+| Gold (`#FFCFA8`) | Types | Type definitions, classes |
+
+## Accessibility
+
+### Contrast Ratios
+
+| Foreground | Background | Ratio | WCAG Level |
+|------------|------------|-------|------------|
+| `#FFFFFF` | `#101010` | 19.5:1 | AAA |
+| `#FFC799` | `#101010` | 10.2:1 | AAA |
+| `#99FFE4` | `#101010` | 14.8:1 | AAA |
+| `#505050` | `#101010` | 3.2:1 | AA |
+
+<Note>
+  All primary text colors meet WCAG AAA standards for contrast.
+</Note>
+
+## Customization
+
+### Adjusting for Personal Preference
+
+<Tabs>
+  <Tab title="More Saturated">
+    Increase vibrancy:
+    - Orange: `#FFC799` → `#FFB366`
+    - Cyan: `#99FFE4` → `#00FFD4`
+    - Green: `#90B99F` → `#70D990`
+  </Tab>
+  
+  <Tab title="Less Contrast">
+    Softer contrast:
+    - Foreground: `#FFFFFF` → `#D0D0D0`
+    - Background: `#101010` → `#1A1A1A`
+  </Tab>
+  
+  <Tab title="Cooler Tones">
+    Replace warm oranges with blues:
+    - Orange: `#FFC799` → `#99B4D1`
+    - Gold: `#FFCFA8` → `#B9C9E0`
+  </Tab>
+</Tabs>
+
+## Export Formats
+
+<AccordionGroup>
+  <Accordion title="iTerm2">
+    Export Vesper as an iTerm2 color preset:
+    
+    Download or create `.itermcolors` file with Vesper palette.
+    
+    Import via: iTerm2 → Preferences → Profiles → Colors → Color Presets → Import
+  </Accordion>
+  
+  <Accordion title="VSCode">
+    Create a VSCode theme with Vesper colors:
+    
+    ```json
+    {
+      "colors": {
+        "editor.background": "#101010",
+        "editor.foreground": "#FFFFFF",
+        "editorCursor.foreground": "#FFC799"
+      },
+      "tokenColors": [
+        {
+          "scope": "comment",
+          "settings": { "foreground": "#505050" }
+        },
+        {
+          "scope": "string",
+          "settings": { "foreground": "#99FFE4" }
+        }
+      ]
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Vim/Neovim">
+    Create Vesper colorscheme for Vim:
+    
+    ```vim
+    hi Normal guifg=#FFFFFF guibg=#101010
+    hi Comment guifg=#505050 gui=italic
+    hi String guifg=#99FFE4
+    hi Keyword guifg=#FFC799
+    hi Function guifg=#FFFFFF
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+- [WezTerm Configuration](/configuration/wezterm) - Apply Vesper to WezTerm
+- [CLI Tools](/configuration/cli-tools) - Configure bat, fzf with Vesper
+- [Oh My Posh](/configuration/oh-my-posh) - Use Vesper colors in your prompt
+- [PowerShell Modules](/configuration/powershell-modules) - PSReadLine with Vesper

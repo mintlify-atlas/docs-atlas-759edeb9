@@ -1,0 +1,159 @@
+---
+title: "Introduction"
+description: "A comprehensive PowerShell development environment for Windows 11 with modern CLI tools and modular configuration"
+---
+
+## What is this project?
+
+This is a complete PowerShell configuration system designed for Windows 11 developers who want a modern, efficient terminal experience. It transforms PowerShell into a powerful development environment with beautiful prompts, smart completions, and integrated CLI tools.
+
+The configuration uses a **modular architecture** with numbered prefixes, making it easy to understand load order and customize individual components without breaking the entire setup.
+
+## Who is this for?
+
+This configuration is perfect for:
+
+- **Windows developers** who want a Unix-like terminal experience without leaving PowerShell
+- **DevOps engineers** managing both Windows and WSL environments
+- **Power users** who prefer keyboard-driven workflows and modern CLI tools
+- **Anyone migrating** from Fish/Zsh/Bash and wants similar functionality in PowerShell
+- **Developers** who value beautiful, functional terminal environments
+
+<Note>
+This configuration works best with **WezTerm** terminal emulator and requires a **Nerd Font** for icon support.
+</Note>
+
+## Problems it solves
+
+### 1. Fragmented PowerShell configuration
+
+Unlike Unix shells with `~/.config` directories, PowerShell's `$PROFILE` often becomes a monolithic file that's hard to maintain. This project provides:
+
+- **Modular structure** with separate files for aliases, tools, functions, and completions
+- **Numbered prefixes** (00-init.ps1, 10-environment.ps1, etc.) for clear load order
+- **Easy debugging** - disable individual modules by renaming or moving files
+
+### 2. Missing modern CLI tools
+
+Windows lacks many Unix tools developers rely on. This configuration integrates:
+
+<CodeGroup>
+```powershell bat (replaces cat)
+cat README.md  # Uses bat with syntax highlighting
+```
+
+```powershell eza (replaces ls)
+ls             # Shows icons and git status
+ll             # Long format with detailed info
+lt             # Tree view
+```
+
+```powershell zoxide (smarter cd)
+cd projects    # Jumps to most frecent match
+cd pro<TAB>    # Smart autocomplete
+```
+</CodeGroup>
+
+### 3. Poor terminal experience
+
+Out-of-the-box PowerShell lacks:
+
+- ❌ No syntax highlighting in file previews
+- ❌ No fuzzy finding for files/history
+- ❌ No smart directory jumping
+- ❌ Basic, uninformative prompts
+
+This configuration fixes all of that:
+
+- ✅ **Oh My Posh** - Beautiful, informative prompts with git status
+- ✅ **FZF integration** - Fuzzy find files, directories, and command history
+- ✅ **PSReadLine** - Advanced history search and predictive IntelliSense
+- ✅ **Vesper color theme** - Warm, readable color palette throughout
+
+### 4. Inconsistent development workflow
+
+Jumping between Windows, WSL, and remote systems creates friction. This setup provides:
+
+- Unified git workflows with short aliases (`gs`, `ga`, `gc`, etc.)
+- WSL integration helpers for seamless file transfers
+- HTTPie shortcuts for API testing (`hget`, `hpost`)
+- Archive extraction that works like Unix (`extract file.tar.gz`)
+
+## Key features
+
+<Accordion title="Modular configuration system">
+All configuration lives in `~/.config/powershell/` with:
+- `conf.d/*.ps1` - Loaded in numbered order
+- `functions/*.ps1` - Custom utilities and helpers
+- `Microsoft.PowerShell_profile.ps1` - Entry point that loads everything
+- `.gitignore` - Excludes machine-specific settings (99-local.ps1)
+</Accordion>
+
+<Accordion title="Modern CLI tools">
+- **fzf** - Fuzzy finder for files, directories, history
+- **bat** - `cat` with syntax highlighting
+- **eza** - `ls` with icons and git integration
+- **zoxide** - Smart directory jumping
+- **ripgrep** - Fast recursive search
+- **delta** - Beautiful git diffs
+- **lazygit** - Terminal UI for git
+- **fastfetch** - System info display
+- **btop** - Resource monitor
+- **jq** - JSON processor
+</Accordion>
+
+<Accordion title="Smart completions and shortcuts">
+- **PSReadLine** - History search with arrow keys, predictive text
+- **PSFzf** - Deep PowerShell + fzf integration
+  - `Ctrl+R` - Search command history
+  - `Ctrl+T` - Find files with preview
+  - `Alt+C` - Navigate directories
+- **Terminal-Icons** - File and folder icons
+- Enhanced tab completions for git, docker, npm, winget, scoop
+</Accordion>
+
+<Accordion title="Custom functions">
+- `mkcd` - Create directory and cd into it
+- `rfv` - Ripgrep + fzf interactive search, open in editor
+- `jqc` - Parse JSON from clipboard
+- `backup` - Create timestamped backups
+- `extract` - Universal archive extraction
+- `reload` - Reload PowerShell configuration
+- WSL helpers - `wsl-here`, `Copy-ToWSL`, `Copy-FromWSL`
+</Accordion>
+
+<Accordion title="Vesper color theme">
+A warm, readable color palette designed for long coding sessions:
+- Dark charcoal background (#101010)
+- Warm orange accents (#FFC799)
+- Muted, easy-to-read text (#B0B0B0)
+- Consistent across FZF, bat, Oh My Posh
+</Accordion>
+
+## Architecture overview
+
+The configuration follows this load sequence:
+
+```
+$PROFILE (symlinked)
+  ↓
+Microsoft.PowerShell_profile.ps1
+  ↓
+conf.d/
+  ├── 00-init.ps1          → Core settings, PSReadLine
+  ├── 10-environment.ps1   → Editor chain, PATH, env vars
+  ├── 20-aliases.ps1       → Git, lazygit, httpie shortcuts
+  ├── 30-tools.ps1         → bat, eza, zoxide, fzf config
+  ├── 40-completions.ps1   → Tab completions
+  ├── 50-functions.ps1     → Load custom functions
+  ├── 60-prompt.ps1        → Oh My Posh initialization
+  └── 99-local.ps1         → Machine-specific (gitignored)
+```
+
+<Warning>
+The numbered prefixes are **critical**. For example, aliases (20) must load after environment variables (10) so tools are in `$PATH`. Prompt (60) loads last for clean startup.
+</Warning>
+
+## What's next?
+
+Follow the [Quickstart](/quickstart) guide to install prerequisites and set up the configuration in under 15 minutes.

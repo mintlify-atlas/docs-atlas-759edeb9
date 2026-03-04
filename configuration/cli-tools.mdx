@@ -1,0 +1,517 @@
+---
+title: CLI Tools Configuration
+description: Configure bat, eza, zoxide, fzf, ripgrep, fd, and delta with the Vesper theme
+---
+
+Modern CLI tools enhance your terminal workflow with better defaults, syntax highlighting, and fuzzy finding. This guide shows how to configure them with the Vesper color scheme.
+
+## Installation
+
+Install all tools at once using Scoop:
+
+```powershell
+scoop install fzf bat eza zoxide ripgrep fd delta lazygit fastfetch btop jq
+```
+
+### Individual Installation
+
+<Tabs>
+  <Tab title="All Tools">
+    ```powershell
+    scoop install fzf bat eza zoxide ripgrep fd delta
+    ```
+  </Tab>
+  
+  <Tab title="Essential Only">
+    ```powershell
+    scoop install bat eza fzf
+    ```
+  </Tab>
+</Tabs>
+
+## Configuration File
+
+Add all tool configurations to `conf.d/30-tools.ps1`:
+
+## Bat (Better cat)
+
+Bat is a `cat` clone with syntax highlighting and Git integration.
+
+### Configuration
+
+```powershell
+# --- Bat (cat replacement) ---
+if (Get-Command bat -ErrorAction SilentlyContinue) {
+    # Override cat with bat
+    Remove-Alias -Name cat -Force -ErrorAction SilentlyContinue
+    function cat { bat --paging=never $args }
+    
+    $env:BAT_THEME = "Vesper"
+}
+```
+
+### Vesper Theme Setup
+
+<Steps>
+  <Step title="Create themes directory">
+    ```powershell
+    New-Item -ItemType Directory -Path "$HOME\.config\bat\themes" -Force
+    ```
+  </Step>
+  
+  <Step title="Add Vesper.tmTheme">
+    Download or create the Vesper theme file at `~/.config/bat/themes/Vesper.tmTheme`. The theme uses:
+    
+    - Background: `#101010`
+    - Foreground: `#B7B7B7`
+    - Keywords: `#FFC799`
+    - Strings: `#99FFE4`
+    - Comments: `#505050`
+  </Step>
+  
+  <Step title="Rebuild bat cache">
+    ```powershell
+    bat cache --build
+    ```
+  </Step>
+  
+  <Step title="Verify theme">
+    ```powershell
+    bat --list-themes | Select-String "Vesper"
+    ```
+  </Step>
+</Steps>
+
+### Usage Examples
+
+```powershell
+# View file with syntax highlighting
+cat script.ps1
+
+# Show line numbers
+bat -n script.ps1
+
+# Show git changes
+bat script.ps1
+
+# View specific lines
+bat -r 10:20 script.ps1
+```
+
+## Eza (Better ls)
+
+Eza is a modern replacement for `ls` with Git integration and icons.
+
+### Configuration
+
+```powershell
+# --- Eza (ls replacement) ---
+if (Get-Command eza -ErrorAction SilentlyContinue) {
+    # Remove built-in ls alias
+    Remove-Alias -Name ls -Force -ErrorAction SilentlyContinue
+    
+    function ls { eza --icons --group-directories-first $args }
+    function ll { eza -l --icons --git --header --group-directories-first $args }
+    function la { eza -la --icons --git --header --group-directories-first $args }
+    function lt { eza --tree --level=2 --icons $args }
+    function lta { eza --tree --level=2 --icons -a $args }
+}
+```
+
+### Command Reference
+
+| Command | Description | Example |
+|---------|-------------|----------|
+| `ls` | Basic listing with icons | `ls` |
+| `ll` | Long format with git status | `ll` |
+| `la` | Long format including hidden | `la` |
+| `lt` | Tree view (2 levels) | `lt` |
+| `lta` | Tree view with hidden files | `lta` |
+
+### Advanced Options
+
+<Accordion title="Custom eza configurations">
+  ```powershell
+  # Sort by modified time
+  function lm { eza -l --sort=modified --reverse --icons $args }
+  
+  # Show only directories
+  function ld { eza -lD --icons $args }
+  
+  # Show file sizes in human-readable format
+  function lh { eza -lh --icons --git $args }
+  
+  # Show git ignored files
+  function lg { eza -l --git-ignore --icons $args }
+  ```
+</Accordion>
+
+## Zoxide (Smarter cd)
+
+Zoxide learns your most-used directories and lets you jump to them quickly.
+
+### Configuration
+
+```powershell
+# --- Zoxide (smarter cd) ---
+if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+    Invoke-Expression (& { (zoxide init powershell | Out-String) })
+    
+    # Override cd with z
+    Remove-Alias -Name cd -Force -ErrorAction SilentlyContinue
+    Set-Alias -Name cd -Value z -Option AllScope
+}
+```
+
+### Usage
+
+```powershell
+# Jump to a directory (learns from your history)
+cd projects
+
+# Jump with partial match
+cd proj
+
+# Jump to subdirectory
+cd proj/my-app
+
+# Interactive selection with fzf
+zi
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `z <partial>` | Jump to most frecent directory matching partial |
+| `zi <partial>` | Interactive selection with fzf |
+| `z -` | Jump to previous directory |
+| `zoxide query <partial>` | Show best match without jumping |
+| `zoxide remove <path>` | Remove directory from database |
+
+## FZF (Fuzzy Finder)
+
+FZF provides fuzzy finding for files, directories, and command history.
+
+### Configuration with Vesper Theme
+
+```powershell
+# --- FZF Configuration with Vesper Theme ---
+if (Get-Command fzf -ErrorAction SilentlyContinue) {
+    # Vesper Theme Colors
+    # Background: #101010, Foreground: #b0b0b0
+    # Accent/Orange: #FFC799, Yellow/Gold: #FFCFA8
+    # Selection: #232323, Comment: #505050
+    
+    $env:FZF_DEFAULT_OPTS = @"
+--color=bg+:-1,bg:-1,spinner:#FFC799,hl:#FFC799
+--color=fg:#b0b0b0,header:#505050,info:#FFCFA8,pointer:#FFC799
+--color=marker:#FFC799,fg+:#ffffff,prompt:#FFC799,hl+:#FFCFA8
+--height 50%
+--layout reverse
+--border rounded
+--info inline
+--marker '>'
+--pointer '>'
+--prompt '> '
+--bind 'ctrl-/:toggle-preview'
+"@
+
+    # fd integration (if available)
+    if (Get-Command fd -ErrorAction SilentlyContinue) {
+        $env:FZF_DEFAULT_COMMAND = 'fd --type file --strip-cwd-prefix --hidden --follow --exclude .git'
+        $env:FZF_CTRL_T_COMMAND = $env:FZF_DEFAULT_COMMAND
+        $env:FZF_ALT_C_COMMAND = 'fd --type dir --strip-cwd-prefix --hidden --follow --exclude .git'
+    }
+
+    # Preview with bat
+    if (Get-Command bat -ErrorAction SilentlyContinue) {
+        $env:FZF_CTRL_T_OPTS = "--preview 'bat --style=numbers --color=always --line-range :300 {}'"
+    }
+
+    # ALT-C preview with eza
+    if (Get-Command eza -ErrorAction SilentlyContinue) {
+        $env:FZF_ALT_C_OPTS = "--preview 'eza --tree --level=2 --icons --color=always {}'"
+    }
+}
+```
+
+### Color Scheme Breakdown
+
+| Element | Color | Description |
+|---------|-------|-------------|
+| `fg` | `#b0b0b0` | Default foreground |
+| `bg` | `-1` | Transparent background |
+| `hl` | `#FFC799` | Highlight matches |
+| `fg+` | `#ffffff` | Selected item foreground |
+| `bg+` | `-1` | Selected item background |
+| `hl+` | `#FFCFA8` | Selected item highlight |
+| `pointer` | `#FFC799` | Selection pointer |
+| `marker` | `#FFC799` | Multi-select marker |
+| `prompt` | `#FFC799` | Input prompt |
+| `spinner` | `#FFC799` | Loading spinner |
+| `info` | `#FFCFA8` | Info text |
+| `header` | `#505050` | Header text |
+
+### Key Bindings
+
+See [PowerShell Modules - PSFzf Integration](/configuration/powershell-modules#psfzf-integration) for PSFzf keybindings (`Ctrl+R`, `Ctrl+T`, `Alt+C`).
+
+## Ripgrep (Better grep)
+
+Ripgrep is an extremely fast search tool that respects `.gitignore` by default.
+
+### Configuration
+
+```powershell
+# --- Ripgrep ---
+if (Get-Command rg -ErrorAction SilentlyContinue) {
+    $env:RIPGREP_CONFIG_PATH = "$HOME\.config\ripgrep\config"
+}
+```
+
+### Config File
+
+Create `~/.config/ripgrep/config`:
+
+```
+# Search hidden files but not .git
+--hidden
+--glob=!.git/*
+
+# Smart case (case-insensitive unless uppercase present)
+--smart-case
+
+# Show line numbers
+--line-number
+
+# Maximum columns to show per line
+--max-columns=200
+
+# Maximum columns to show per match
+--max-columns-preview
+
+# Add custom file types
+--type-add=web:*.{html,css,js,jsx,ts,tsx}
+```
+
+### Usage Examples
+
+```powershell
+# Search for pattern
+rg "TODO"
+
+# Search specific file types
+rg "function" --type ps1
+
+# Search with context
+rg "error" -C 3
+
+# Count matches
+rg "import" --count
+```
+
+## Fd (Better find)
+
+Fd is a simple, fast alternative to `find`.
+
+### Usage
+
+```powershell
+# Find files by name
+fd script.ps1
+
+# Find by extension
+fd -e ps1
+
+# Find in specific directory
+fd config .config
+
+# Find directories only
+fd --type d config
+
+# Execute command on results
+fd -e ps1 -x bat {}
+```
+
+### Integration with FZF
+
+Fd powers FZF file/directory discovery (configured above in FZF section).
+
+## Delta (Better git diff)
+
+Delta provides syntax-highlighted diffs with line numbers and side-by-side view.
+
+### Configuration
+
+```powershell
+# --- Delta (git diff pager) ---
+if (Get-Command delta -ErrorAction SilentlyContinue) {
+    $env:GIT_PAGER = "delta"
+}
+```
+
+### Git Configuration
+
+Add to `~/.gitconfig`:
+
+```ini
+[core]
+    pager = delta
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+    navigate = true
+    light = false
+    line-numbers = true
+    side-by-side = false
+    syntax-theme = base16
+
+[merge]
+    conflictstyle = diff3
+
+[diff]
+    colorMoved = default
+```
+
+### Vesper Delta Colors
+
+<Accordion title="Custom delta theme">
+  Add to `~/.gitconfig`:
+  
+  ```ini
+  [delta "vesper"]
+      syntax-theme = base16
+      line-numbers-left-format = "{nm:>4}│"
+      line-numbers-right-format = "{np:>4}│"
+      file-style = "#FFC799 bold"
+      file-decoration-style = "#FFC799 ul"
+      hunk-header-style = "#FFCFA8 bold"
+      hunk-header-decoration-style = "#505050"
+      line-numbers-zero-style = "#505050"
+      line-numbers-minus-style = "#F5A191"
+      line-numbers-plus-style = "#90B99F"
+      minus-style = "#F5A191"
+      plus-style = "#90B99F"
+  ```
+  
+  Enable with:
+  ```ini
+  [delta]
+      features = vesper
+  ```
+</Accordion>
+
+## Complete Configuration
+
+Here's the complete `conf.d/30-tools.ps1` file with all tools configured:
+
+<Accordion title="View complete 30-tools.ps1">
+  ```powershell
+  # Modern CLI tool integrations
+
+  # --- Bat (cat replacement) ---
+  if (Get-Command bat -ErrorAction SilentlyContinue) {
+      Remove-Alias -Name cat -Force -ErrorAction SilentlyContinue
+      function cat { bat --paging=never $args }
+      $env:BAT_THEME = "Vesper"
+  }
+
+  # --- Eza (ls replacement) ---
+  if (Get-Command eza -ErrorAction SilentlyContinue) {
+      Remove-Alias -Name ls -Force -ErrorAction SilentlyContinue
+      function ls { eza --icons --group-directories-first $args }
+      function ll { eza -l --icons --git --header --group-directories-first $args }
+      function la { eza -la --icons --git --header --group-directories-first $args }
+      function lt { eza --tree --level=2 --icons $args }
+      function lta { eza --tree --level=2 --icons -a $args }
+  }
+
+  # --- Zoxide (smarter cd) ---
+  if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+      Invoke-Expression (& { (zoxide init powershell | Out-String) })
+      Remove-Alias -Name cd -Force -ErrorAction SilentlyContinue
+      Set-Alias -Name cd -Value z -Option AllScope
+  }
+
+  # --- Ripgrep ---
+  if (Get-Command rg -ErrorAction SilentlyContinue) {
+      $env:RIPGREP_CONFIG_PATH = "$HOME\.config\ripgrep\config"
+  }
+
+  # --- Delta (git diff pager) ---
+  if (Get-Command delta -ErrorAction SilentlyContinue) {
+      $env:GIT_PAGER = "delta"
+  }
+
+  # --- FZF Configuration with Vesper Theme ---
+  if (Get-Command fzf -ErrorAction SilentlyContinue) {
+      $env:FZF_DEFAULT_OPTS = @"
+--color=bg+:-1,bg:-1,spinner:#FFC799,hl:#FFC799
+--color=fg:#b0b0b0,header:#505050,info:#FFCFA8,pointer:#FFC799
+--color=marker:#FFC799,fg+:#ffffff,prompt:#FFC799,hl+:#FFCFA8
+--height 50%
+--layout reverse
+--border rounded
+--info inline
+--marker '>'
+--pointer '>'
+--prompt '> '
+--bind 'ctrl-/:toggle-preview'
+"@
+
+      if (Get-Command fd -ErrorAction SilentlyContinue) {
+          $env:FZF_DEFAULT_COMMAND = 'fd --type file --strip-cwd-prefix --hidden --follow --exclude .git'
+          $env:FZF_CTRL_T_COMMAND = $env:FZF_DEFAULT_COMMAND
+          $env:FZF_ALT_C_COMMAND = 'fd --type dir --strip-cwd-prefix --hidden --follow --exclude .git'
+      }
+
+      if (Get-Command bat -ErrorAction SilentlyContinue) {
+          $env:FZF_CTRL_T_OPTS = "--preview 'bat --style=numbers --color=always --line-range :300 {}'"
+      }
+
+      if (Get-Command eza -ErrorAction SilentlyContinue) {
+          $env:FZF_ALT_C_OPTS = "--preview 'eza --tree --level=2 --icons --color=always {}'"
+      }
+  }
+  ```
+</Accordion>
+
+## Verification
+
+Test all tools are working:
+
+```powershell
+# Test bat
+cat $PROFILE
+
+# Test eza
+ll
+
+# Test zoxide (after using cd a few times)
+cd ~
+cd $PROFILE
+cd ~
+cd prof  # Should jump to profile directory
+
+# Test fzf
+Ctrl+R  # Search history
+Ctrl+T  # File picker
+
+# Test ripgrep
+rg "function" --type ps1
+
+# Test fd
+fd .ps1
+
+# Test delta
+git diff
+```
+
+## Related Resources
+
+- [PowerShell Modules](/configuration/powershell-modules) - PSFzf integration
+- [Vesper Theme](/configuration/vesper-theme) - Complete color palette
+- [WezTerm Configuration](/configuration/wezterm) - Terminal color scheme

@@ -1,80 +1,389 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Get your Windows 11 PowerShell environment up and running in 15 minutes"
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+Before setting up the PowerShell configuration, you need a fresh Windows 11 installation with updated system and drivers.
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Update Windows 11">
+    Open **Settings** → **Windows Update** and install all available updates.
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    ```powershell
+    # Verify Windows version
+    winver
+    ```
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    After updates complete, restart your PC.
+  </Step>
 
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+  <Step title="Update drivers">
+    Download and install [Driver Booster](https://www.iobit.com/en/driver-booster.php) to update system drivers.
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
+    <Note>
+    Repeat Windows Update after driver updates to catch any additional patches.
+    </Note>
+  </Step>
+
+  <Step title="Clean up pre-installed apps">
+    Remove unnecessary bloatware:
+    
+    1. Open **Settings** → **Apps** → **Installed apps**
+    2. Uninstall apps you don't need (games, promotional software, etc.)
+    3. Update remaining apps via **Microsoft Store**
+  </Step>
+</Steps>
+
+## Install core tools
+
+### Package managers
+
+<Steps>
+  <Step title="Verify Winget">
+    Winget comes pre-installed on Windows 11. Verify it's available:
+    
+    ```powershell
+    winget --version
+    ```
+    
+    Update sources:
+    
+    ```powershell
+    winget source update
+    ```
+  </Step>
+
+  <Step title="Install Scoop">
+    Scoop handles CLI tools better than Winget. Install it:
+    
+    ```powershell
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+    Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+    ```
+    
+    Add essential buckets:
+    
+    ```powershell
+    scoop bucket add extras
+    scoop bucket add nerd-fonts
+    scoop update
+    ```
+  </Step>
+</Steps>
+
+### Terminal and fonts
+
+<Steps>
+  <Step title="Install WezTerm">
+    WezTerm is a GPU-accelerated terminal with excellent font rendering:
+    
+    ```powershell
+    winget install wez.wezterm
+    ```
+    
+    Create the config directory:
+    
+    ```powershell
+    New-Item -ItemType Directory -Path "$HOME\.config\wezterm" -Force
+    ```
+  </Step>
+
+  <Step title="Install Nerd Font">
+    Nerd Fonts provide icons for the terminal:
+    
+    ```powershell
+    scoop install nerd-fonts/JetBrainsMono-NF
+    ```
+    
+    <Note>
+    After installation, configure WezTerm to use "JetBrainsMono Nerd Font" in your `wezterm.lua` config file.
+    </Note>
+  </Step>
+
+  <Step title="Install Oh My Posh">
+    Oh My Posh provides beautiful, informative prompts:
+    
+    ```powershell
+    winget install JanDeDobbeleer.OhMyPosh -s winget
+    ```
+    
+    Create the theme directory:
+    
+    ```powershell
+    New-Item -ItemType Directory -Path "$HOME\.config\oh-my-posh" -Force
+    ```
+    
+    Download your custom theme (optional):
+    
+    ```powershell
+    curl -o $HOME\.config\oh-my-posh\heyitsiveen.omp.json https://raw.githubusercontent.com/vntbln/ubuntu/main/.config/oh-my-posh/heyitsiveen.omp.json
+    ```
+  </Step>
+</Steps>
+
+### CLI tools
+
+<Steps>
+  <Step title="Install all CLI tools">
+    Install modern replacements for Unix tools in one command:
+    
+    ```powershell
+    scoop install fzf bat eza zoxide ripgrep fd delta lazygit fastfetch btop jq
+    ```
+    
+    Install HTTPie separately via Winget:
+    
+    ```powershell
+    winget install HTTPie.HTTPie
+    ```
+  </Step>
+
+  <Step title="Verify installations">
+    Check that all tools are available:
+    
+    ```powershell
+    fzf --version
+    bat --version
+    eza --version
+    zoxide --version
+    rg --version
+    fd --version
+    delta --version
+    lazygit --version
+    fastfetch --version
+    btop --version
+    jq --version
+    http --version
+    ```
+    
+    <Warning>
+    If any command is not found, restart your terminal or run:
+    ```powershell
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+    ```
+    </Warning>
+  </Step>
+</Steps>
+
+### PowerShell modules
+
+<Steps>
+  <Step title="Install required modules">
+    Install PowerShell modules from the gallery:
+    
+    ```powershell
+    Install-Module -Name PSReadLine -Force -SkipPublisherCheck
+    Install-Module -Name PSFzf -Force
+    Install-Module -Name Terminal-Icons -Force
+    ```
+  </Step>
+
+  <Step title="Verify modules">
+    Check installations:
+    
+    ```powershell
+    Get-Module -ListAvailable -Name PSReadLine, PSFzf, Terminal-Icons
+    ```
+  </Step>
+</Steps>
+
+## Set up PowerShell configuration
+
+<Steps>
+  <Step title="Create directory structure">
+    Create the config directories:
+    
+    ```powershell
+    New-Item -ItemType Directory -Path "$HOME\.config\powershell\conf.d" -Force
+    New-Item -ItemType Directory -Path "$HOME\.config\powershell\functions" -Force
+    ```
+  </Step>
+
+  <Step title="Create profile entry point">
+    Create the main profile file at `$HOME\.config\powershell\Microsoft.PowerShell_profile.ps1`:
+    
+    ```powershell
+    @'
+# ============================================================
+# POWERSHELL CONFIGURATION
+# ============================================================
+# Lean entry point - modular configs live in conf.d/
+# Functions are loaded from functions/
+# ============================================================
+
+$ConfigRoot = "$HOME\.config\powershell"
+
+# Source all conf.d files in order
+$confDir = Join-Path $ConfigRoot "conf.d"
+if (Test-Path $confDir) {
+    Get-ChildItem -Path $confDir -Filter "*.ps1" | 
+        Sort-Object Name | 
+        ForEach-Object { 
+            . $_.FullName 
+        }
+}
+'@ | Out-File -FilePath "$HOME\.config\powershell\Microsoft.PowerShell_profile.ps1" -Encoding UTF8
+    ```
+  </Step>
+
+  <Step title="Create symlink">
+    Link PowerShell's `$PROFILE` to your config:
+    
+    ```powershell
+    # Create profile directory if it doesn't exist
+    $profileDir = Split-Path $PROFILE -Parent
+    if (!(Test-Path $profileDir)) {
+        New-Item -ItemType Directory -Path $profileDir -Force
+    }
+
+    # Remove existing profile
+    if (Test-Path $PROFILE) {
+        Remove-Item $PROFILE -Force
+    }
+
+    # Create symbolic link
+    New-Item -ItemType SymbolicLink -Path $PROFILE -Target "$HOME\.config\powershell\Microsoft.PowerShell_profile.ps1"
+    ```
+    
+    <Warning>
+    Creating symbolic links requires either:
+    - Windows **Developer Mode** enabled (Settings → Privacy & Security → For developers)
+    - Running PowerShell as **Administrator**
+    </Warning>
+  </Step>
+
+  <Step title="Clone or download configuration files">
+    If you're using this as a template, you'll need to create the configuration files in `conf.d/` and `functions/`.
+    
+    The minimum files needed are:
+    - `conf.d/00-init.ps1` - Core settings and PSReadLine
+    - `conf.d/10-environment.ps1` - Environment variables and editor chain
+    - `conf.d/20-aliases.ps1` - Git and tool aliases
+    - `conf.d/30-tools.ps1` - Tool integrations (bat, eza, zoxide, fzf)
+    - `conf.d/60-prompt.ps1` - Oh My Posh initialization
+    
+    See the [PowerShell profile structure](/powershell/profile-structure) documentation for complete details.
+  </Step>
+</Steps>
+
+## Verify the setup
+
+<Steps>
+  <Step title="Restart terminal">
+    Close and reopen WezTerm to load the new configuration.
+  </Step>
+
+  <Step title="Test core functionality">
+    Verify key features work:
+    
+    <CodeGroup>
+    ```powershell History search
+    # Press Ctrl+R and start typing to search command history
+    ```
+    
+    ```powershell File picker
+    # Press Ctrl+T to open fuzzy file finder with preview
+    ```
+    
+    ```powershell Directory navigation
+    # Press Alt+C to navigate directories with tree preview
+    ```
+    
+    ```powershell Git aliases
+    gs          # git status
+    ga .        # git add .
+    gcm "test"  # git commit -m "test"
+    ```
+    
+    ```powershell Modern tools
+    ll          # eza long listing with icons
+    cat README.md  # bat with syntax highlighting
+    cd ~        # zoxide smart directory jumping
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Check Oh My Posh prompt">
+    Your prompt should display:
+    - Current directory
+    - Git branch and status (if in a repo)
+    - Execution time for long commands
+    - Custom theme styling
+    
+    If you don't see a themed prompt, check that your Oh My Posh theme file exists:
+    
+    ```powershell
+    Test-Path "$HOME\.config\oh-my-posh\*.omp.json"
+    ```
+  </Step>
+</Steps>
+
+## Quick command reference
+
+Here are the most useful commands to get started:
+
+| Command | Description |
+|---------|-------------|
+| `gs` | Git status |
+| `ga <file>` | Git add |
+| `gcm "msg"` | Git commit with message |
+| `ll` | Long list with icons and git status |
+| `lt` | Tree view (2 levels) |
+| `cat <file>` | View file with syntax highlighting |
+| `Ctrl+R` | Search command history |
+| `Ctrl+T` | Fuzzy find files |
+| `Alt+C` | Fuzzy find directories |
+| `mkcd <name>` | Create directory and cd into it |
+| `reload` | Reload PowerShell configuration |
+| `~` | Go to home directory |
+| `..` | Go up one directory |
+| `-` | Go to previous directory |
+
+## Troubleshooting
+
+<Accordion title="Scripts disabled error">
+If you see "running scripts is disabled on this system":
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+```
 </Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+<Accordion title="Icons not displaying">
+1. Install a Nerd Font: `scoop install nerd-fonts/JetBrainsMono-NF`
+2. Configure WezTerm to use the Nerd Font in `~/.config/wezterm/wezterm.lua`:
+```lua
+config.font = wezterm.font("JetBrainsMono Nerd Font")
+```
+</Accordion>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+<Accordion title="Oh My Posh not found">
+Refresh your PATH:
 
-### Step 3: Go live
+```powershell
+$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
+Then restart your terminal.
+</Accordion>
+
+<Accordion title="FZF keybindings not working">
+Ensure PSFzf is installed and imported:
+
+```powershell
+Install-Module PSFzf -Force
+Import-Module PSFzf
+```
+
+Then restart PowerShell.
 </Accordion>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+- Customize the Vesper color theme in `conf.d/30-tools.ps1`
+- Add your own aliases in `conf.d/20-aliases.ps1`
+- Create custom functions in `functions/`
+- Add machine-specific settings to `conf.d/99-local.ps1` (gitignored)
+- Explore the [PowerShell configuration](/powershell/profile-structure) and [custom functions](/powershell/custom-functions) for advanced features

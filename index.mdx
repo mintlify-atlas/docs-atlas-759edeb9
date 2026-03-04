@@ -1,97 +1,189 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Windows 11 Development Environment"
+description: "Transform your Windows 11 system into a powerful development environment with PowerShell, WezTerm, and modern CLI tools"
+mode: "custom"
 ---
 
-## Setting up
+<div className="relative overflow-hidden bg-gradient-to-br from-[#101010] via-[#1a1a1a] to-[#101010] dark:from-[#0f1117] dark:via-[#1a1d27] dark:to-[#0f1117] py-20">
+  <div className="max-w-6xl mx-auto px-6 lg:px-8">
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+          Build Your Perfect Dev Setup
+        </h1>
+        <p className="text-lg sm:text-xl text-gray-300 dark:text-gray-400 mb-8 max-w-2xl">
+          A complete guide to setting up a modern Windows 11 development environment with PowerShell, WezTerm terminal, Oh My Posh prompts, and essential CLI tools.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <a 
+            href="/quickstart" 
+            className="inline-flex items-center px-6 py-3 rounded-lg bg-[#fa4c2a] hover:bg-[#e94b27] text-white font-semibold transition-colors no-underline"
+          >
+            Get Started
+            <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+          <a 
+            href="/introduction" 
+            className="inline-flex items-center px-6 py-3 rounded-lg border border-white/30 bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors no-underline"
+          >
+            Learn More
+          </a>
+        </div>
+      </div>
+      <div className="hidden lg:block">
+        <div className="relative rounded-2xl overflow-hidden border border-[#27272a] dark:border-[#27272a] bg-[#1a1d27] dark:bg-[#1a1d27] p-6 shadow-2xl">
+          <div className="font-mono text-sm">
+            <div className="flex items-center gap-2 mb-4 text-gray-400">
+              <div className="w-3 h-3 rounded-full bg-[#F5A191]"></div>
+              <div className="w-3 h-3 rounded-full bg-[#E6B99D]"></div>
+              <div className="w-3 h-3 rounded-full bg-[#90B99F]"></div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-[#FFC799]">PS C:\Users\dev&gt; <span className="text-gray-300">mkcd my-project</span></div>
+              <div className="text-[#90B99F]">✓ Created directory: my-project</div>
+              <div className="text-[#FFC799]">PS C:\Users\dev\my-project&gt; <span className="text-gray-300">rfv "TODO"</span></div>
+              <div className="text-gray-400">🔍 Searching files...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-Get your documentation site up and running in minutes.
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      Quick Start
+    </h2>
+    <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+      Get your development environment configured in minutes
+    </p>
+  </div>
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+  <Steps>
+    <Step title="Install PowerShell and WezTerm">
+      Set up the foundation with PowerShell 7+ and WezTerm terminal emulator. Install Oh My Posh for beautiful prompts.
+      
+      ```powershell
+      winget install Microsoft.PowerShell
+      winget install wez.wezterm
+      winget install JanDeDobbeleer.OhMyPosh
+      ```
+    </Step>
+    
+    <Step title="Install modern CLI tools">
+      Add essential developer tools using Scoop package manager for a streamlined workflow.
+      
+      ```powershell
+      scoop install fzf bat eza zoxide ripgrep fd delta lazygit
+      ```
+    </Step>
+    
+    <Step title="Configure your PowerShell profile">
+      Set up modular configuration with automatic loading of functions, aliases, and tool integrations.
+      
+      ```powershell
+      git clone https://github.com/heyitsiveen/windows-11 ~/.config
+      . $HOME\.config\powershell\Microsoft.PowerShell_profile.ps1
+      ```
+    </Step>
+  </Steps>
+</div>
 
-## Make it yours
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      Explore by Topic
+    </h2>
+    <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+      Dive deep into each aspect of your development environment
+    </p>
+  </div>
 
-Design a docs site that looks great and empowers your users.
+  <CardGroup cols={2}>
+    <Card title="Setup Guides" icon="wrench" href="/setup/windows-setup">
+      Step-by-step instructions for configuring Windows 11, installing development tools, and setting up PowerShell.
+    </Card>
+    <Card title="Configuration" icon="sliders" href="/configuration/powershell-modules">
+      Configure PowerShell modules, WezTerm terminal, Oh My Posh themes, and CLI tools with the Vesper color scheme.
+    </Card>
+    <Card title="PowerShell" icon="terminal" href="/powershell/profile-structure">
+      Learn about the modular PowerShell configuration structure, custom functions, and useful aliases.
+    </Card>
+    <Card title="Command Reference" icon="book" href="/reference/commands">
+      Complete reference for all available commands, keyboard shortcuts, Git aliases, and WSL integration helpers.
+    </Card>
+  </CardGroup>
+</div>
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      Key Features
+    </h2>
+    <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+      Everything you need for a productive development workflow
+    </p>
+  </div>
 
-## Create beautiful pages
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27] hover:border-[#fa4c2a] dark:hover:border-[#fa4c2a] transition-colors">
+      <div className="text-[#fa4c2a] mb-3">
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Modular Configuration</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        PowerShell config organized with conf.d structure for easy maintenance and customization
+      </p>
+    </div>
 
-Everything you need to create world-class documentation.
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27] hover:border-[#fa4c2a] dark:hover:border-[#fa4c2a] transition-colors">
+      <div className="text-[#fa4c2a] mb-3">
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Beautiful Terminal</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        WezTerm with custom Vesper theme and Oh My Posh prompt for a stunning terminal experience
+      </p>
+    </div>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27] hover:border-[#fa4c2a] dark:hover:border-[#fa4c2a] transition-colors">
+      <div className="text-[#fa4c2a] mb-3">
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Modern CLI Tools</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        bat, eza, zoxide, fzf, ripgrep, and more for supercharged productivity
+      </p>
+    </div>
+  </div>
+</div>
 
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<div className="mt-20 mb-16 max-w-5xl mx-auto px-6">
+  <div className="p-8 rounded-2xl border border-gray-200 dark:border-[#27272a] bg-gradient-to-br from-gray-50 to-white dark:from-[#1a1d27] dark:to-[#242838] text-center">
+    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      Ready to Transform Your Workflow?
+    </h2>
+    <p className="text-base text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+      Get started with our comprehensive guide and build the perfect Windows 11 development environment today.
+    </p>
+    <a 
+      href="/quickstart" 
+      className="inline-flex items-center px-6 py-3 rounded-lg bg-[#fa4c2a] hover:bg-[#e94b27] text-white font-semibold transition-colors no-underline"
+    >
+      Start Setup Guide
+      <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    </a>
+  </div>
+</div>

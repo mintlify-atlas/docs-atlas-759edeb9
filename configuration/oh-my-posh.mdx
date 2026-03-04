@@ -1,0 +1,426 @@
+---
+title: Oh My Posh
+description: Configure Oh My Posh for a beautiful, informative PowerShell prompt
+---
+
+Oh My Posh transforms your PowerShell prompt with git status, execution time, error indicators, and custom segments - all with beautiful theming.
+
+## Installation
+
+<Tabs>
+  <Tab title="Winget (Recommended)">
+    ```powershell
+    winget install JanDeDobbeleer.OhMyPosh -s winget
+    ```
+  </Tab>
+  
+  <Tab title="Scoop">
+    ```powershell
+    scoop install oh-my-posh
+    ```
+  </Tab>
+</Tabs>
+
+Verify installation:
+
+```powershell
+oh-my-posh --version
+```
+
+### Refresh PATH
+
+If `oh-my-posh` command is not found after installation:
+
+```powershell
+$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + 
+            [System.Environment]::GetEnvironmentVariable("PATH", "User")
+```
+
+## Configuration
+
+### Create Theme Directory
+
+```powershell
+New-Item -ItemType Directory -Path "$HOME\.config\oh-my-posh" -Force
+```
+
+### PowerShell Integration
+
+Add to `conf.d/60-prompt.ps1`:
+
+```powershell
+# Oh My Posh Prompt Configuration
+
+if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
+    # Use existing theme from ~/.config/oh-my-posh
+    $ompThemePath = "$HOME\.config\oh-my-posh"
+    
+    # Look for theme files in order of preference
+    $themeFiles = @(
+        "$ompThemePath\theme.omp.json",
+        "$ompThemePath\config.omp.json"
+    )
+    
+    $selectedTheme = $null
+    foreach ($themeFile in $themeFiles) {
+        if (Test-Path $themeFile) {
+            $selectedTheme = $themeFile
+            break
+        }
+    }
+    
+    # Fallback to wildcard search
+    if (-not $selectedTheme) {
+        $found = Get-ChildItem -Path "$ompThemePath\*.omp.json" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($found) {
+            $selectedTheme = $found.FullName
+        }
+    }
+    
+    if ($selectedTheme) {
+        oh-my-posh init pwsh --config $selectedTheme | Invoke-Expression
+    } else {
+        # Fallback to built-in theme if no custom theme found
+        oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\agnoster.omp.json" | Invoke-Expression
+    }
+}
+```
+
+## Exploring Built-in Themes
+
+### List Available Themes
+
+```powershell
+Get-ChildItem $env:POSH_THEMES_PATH
+```
+
+### Preview a Theme
+
+Preview any built-in theme without changing your configuration:
+
+```powershell
+oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\agnoster.omp.json" | Invoke-Expression
+```
+
+Popular themes:
+- `agnoster.omp.json` - Classic minimal theme
+- `paradox.omp.json` - Detailed with git info
+- `powerlevel10k_rainbow.omp.json` - Colorful powerline
+- `atomic.omp.json` - Clean two-line prompt
+- `jandedobbeleer.omp.json` - Creator's personal theme
+
+## Creating a Custom Theme
+
+### Basic Theme Structure
+
+Create `~/.config/oh-my-posh/theme.omp.json`:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "version": 2,
+  "final_space": true,
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "segments": [
+        {
+          "type": "path",
+          "style": "powerline",
+          "powerline_symbol": "\uE0B0",
+          "foreground": "#101010",
+          "background": "#FFC799",
+          "properties": {
+            "style": "folder"
+          }
+        },
+        {
+          "type": "git",
+          "style": "powerline",
+          "powerline_symbol": "\uE0B0",
+          "foreground": "#FFFFFF",
+          "background": "#90B99F",
+          "properties": {
+            "fetch_status": true,
+            "branch_icon": "\uE0A0 "
+          }
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "right",
+      "segments": [
+        {
+          "type": "executiontime",
+          "style": "plain",
+          "foreground": "#FFCFA8",
+          "properties": {
+            "threshold": 500,
+            "style": "austin"
+          }
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "type": "text",
+          "style": "plain",
+          "foreground": "#FFC799",
+          "template": "❯ "
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Vesper Theme Colors
+
+Use these colors in your custom theme to match the Vesper palette:
+
+| Element | Color | Hex |
+|---------|-------|-----|
+| Primary accent | Orange | `#FFC799` |
+| Secondary accent | Gold | `#FFCFA8` |
+| Success/Git | Green | `#90B99F` |
+| Warning | Yellow | `#E6B99D` |
+| Error | Red | `#F5A191` |
+| Foreground | White | `#FFFFFF` |
+| Background | Dark | `#101010` |
+| Muted | Gray | `#505050` |
+
+## Popular Segments
+
+<AccordionGroup>
+  <Accordion title="Path Segment">
+    ```json
+    {
+      "type": "path",
+      "style": "powerline",
+      "powerline_symbol": "\uE0B0",
+      "foreground": "#101010",
+      "background": "#FFC799",
+      "properties": {
+        "style": "folder",
+        "max_depth": 3,
+        "folder_icon": "\uF07C",
+        "home_icon": "~"
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Git Segment">
+    ```json
+    {
+      "type": "git",
+      "style": "powerline",
+      "powerline_symbol": "\uE0B0",
+      "foreground": "#FFFFFF",
+      "background": "#90B99F",
+      "properties": {
+        "fetch_status": true,
+        "branch_icon": "\uE0A0 ",
+        "branch_ahead_icon": "↑",
+        "branch_behind_icon": "↓",
+        "branch_gone": "✘",
+        "commit_icon": "@",
+        "tag_icon": "🏷"
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Execution Time">
+    ```json
+    {
+      "type": "executiontime",
+      "style": "plain",
+      "foreground": "#FFCFA8",
+      "properties": {
+        "threshold": 500,
+        "style": "austin",
+        "always_enabled": false
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Exit Code">
+    ```json
+    {
+      "type": "exit",
+      "style": "plain",
+      "foreground": "#F5A191",
+      "properties": {
+        "always_enabled": true,
+        "error_icon": "✘",
+        "success_icon": ""
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Battery Status">
+    ```json
+    {
+      "type": "battery",
+      "style": "powerline",
+      "powerline_symbol": "\uE0B0",
+      "foreground": "#FFFFFF",
+      "background": "#E6B99D",
+      "properties": {
+        "charged_icon": "\uF240",
+        "charging_icon": "\uF0E7",
+        "discharging_icon": "\uF243"
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Node.js Version">
+    ```json
+    {
+      "type": "node",
+      "style": "powerline",
+      "powerline_symbol": "\uE0B0",
+      "foreground": "#101010",
+      "background": "#90B99F",
+      "properties": {
+        "fetch_version": true,
+        "display_mode": "files"
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Theme Styles
+
+<Tabs>
+  <Tab title="Powerline">
+    Classic powerline style with connected segments:
+    ```json
+    "style": "powerline",
+    "powerline_symbol": "\uE0B0"
+    ```
+  </Tab>
+  
+  <Tab title="Plain">
+    Simple text without backgrounds:
+    ```json
+    "style": "plain"
+    ```
+  </Tab>
+  
+  <Tab title="Diamond">
+    Segments with leading/trailing icons:
+    ```json
+    "style": "diamond",
+    "leading_diamond": "\uE0B6",
+    "trailing_diamond": "\uE0B4"
+    ```
+  </Tab>
+</Tabs>
+
+## Testing Your Theme
+
+Test theme changes immediately:
+
+```powershell
+oh-my-posh init pwsh --config "$HOME\.config\oh-my-posh\theme.omp.json" | Invoke-Expression
+```
+
+Or reload your PowerShell profile:
+
+```powershell
+. $PROFILE
+```
+
+## Exporting Theme Configuration
+
+Export current theme to customize it:
+
+```powershell
+oh-my-posh config export --config "$env:POSH_THEMES_PATH\agnoster.omp.json" --output "$HOME\.config\oh-my-posh\mytheme.omp.json"
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Icons not displaying">
+    Install a Nerd Font:
+    ```powershell
+    scoop install nerd-fonts/JetBrainsMono-NF
+    ```
+    
+    Configure your terminal to use the Nerd Font in WezTerm:
+    ```lua
+    config.font = wezterm.font 'JetBrains Mono'
+    ```
+  </Accordion>
+  
+  <Accordion title="Prompt not loading">
+    Check if Oh My Posh is in PATH:
+    ```powershell
+    Get-Command oh-my-posh
+    ```
+    
+    Verify theme file exists:
+    ```powershell
+    Test-Path "$HOME\.config\oh-my-posh\theme.omp.json"
+    ```
+  </Accordion>
+  
+  <Accordion title="Slow prompt rendering">
+    Disable expensive segments like git status fetching:
+    ```json
+    "properties": {
+      "fetch_status": false
+    }
+    ```
+    
+    Or increase cache timeout:
+    ```json
+    "properties": {
+      "fetch_status": true,
+      "cache_timeout": 10
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Configuration
+
+<Accordion title="Conditional Segments">
+  Show segments only in specific contexts:
+  
+  ```json
+  {
+    "type": "python",
+    "style": "powerline",
+    "powerline_symbol": "\uE0B0",
+    "foreground": "#FFFFFF",
+    "background": "#ACA1CF",
+    "properties": {
+      "display_mode": "files",
+      "fetch_virtual_env": true
+    }
+  }
+  ```
+  
+  This only appears when Python files are detected in the current directory.
+</Accordion>
+
+## Related Resources
+
+- [WezTerm Configuration](/configuration/wezterm) - Terminal setup with Vesper theme
+- [Vesper Theme](/configuration/vesper-theme) - Complete color palette reference
+- [PowerShell Modules](/configuration/powershell-modules) - Configure PSReadLine and Terminal-Icons
+- [Oh My Posh Documentation](https://ohmyposh.dev/) - Official documentation

@@ -1,0 +1,249 @@
+---
+title: PowerShell Modules
+description: Configure PSReadLine, PSFzf, and Terminal-Icons for an enhanced PowerShell experience
+---
+
+Three essential PowerShell modules enhance your terminal experience: PSReadLine for intelligent command-line editing, PSFzf for fuzzy finding, and Terminal-Icons for file type icons.
+
+## Installation
+
+Install all three modules from the PowerShell Gallery:
+
+```powershell
+# PSReadLine - Enhanced command line editing (usually pre-installed, update to latest)
+Install-Module -Name PSReadLine -Force -SkipPublisherCheck
+
+# PSFzf - FZF integration for PowerShell
+Install-Module -Name PSFzf -Force
+
+# Terminal-Icons - File/folder icons in terminal
+Install-Module -Name Terminal-Icons -Force
+```
+
+### Verify Installation
+
+```powershell
+Get-Module -ListAvailable -Name PSReadLine, PSFzf, Terminal-Icons
+```
+
+## PSReadLine Configuration
+
+PSReadLine provides advanced command-line editing features including history search, predictive IntelliSense, and custom key bindings.
+
+### Basic Setup
+
+Add to `conf.d/00-init.ps1`:
+
+```powershell
+# Core PowerShell settings and PSReadLine configuration
+
+# Powershell to UTF-8
+[console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding
+
+if (Get-Module -ListAvailable -Name PSReadLine) {
+    Import-Module PSReadLine
+
+    # Edit mode
+    Set-PSReadLineOption -EditMode Emacs
+    Set-PSReadLineOption -BellStyle None
+    Set-PSReadLineKeyHandler -Chord 'Ctrl+d' -Function DeleteChar
+
+    # History search with arrow keys
+    Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+    Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+
+    # Predictive IntelliSense
+    try {
+        Set-PSReadLineOption -PredictionSource HistoryAndPlugin -ErrorAction Stop
+        Set-PSReadLineOption -PredictionViewStyle ListView -ErrorAction Stop
+        
+        # Colors for predictions (Vesper-inspired)
+        Set-PSReadLineOption -Colors @{
+            InlinePrediction = '#505050'
+        } -ErrorAction SilentlyContinue
+    } catch {
+        # Fallback for non-interactive or unsupported terminals
+        Set-PSReadLineOption -PredictionSource History -ErrorAction SilentlyContinue
+    }
+
+    # Better history
+    Set-PSReadLineOption -HistorySearchCursorMovesToEnd
+    Set-PSReadLineOption -MaximumHistoryCount 10000
+}
+```
+
+### Key Features
+
+<Accordion title="History Search">
+  Start typing a command and press `Up` or `Down` to search through your command history. Only commands starting with what you've typed will appear.
+  
+  ```powershell
+  Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+  Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+  ```
+</Accordion>
+
+<Accordion title="Predictive IntelliSense">
+  PowerShell predicts commands based on your history and available plugins, displaying suggestions as you type.
+  
+  ```powershell
+  Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+  Set-PSReadLineOption -PredictionViewStyle ListView
+  ```
+  
+  Toggle between `ListView` and `InlineView` based on preference.
+</Accordion>
+
+<Accordion title="Custom Color Scheme">
+  Customize colors to match the Vesper theme:
+  
+  ```powershell
+  Set-PSReadLineOption -Colors @{
+      InlinePrediction = '#505050'
+      Command = '#FFC799'
+      Parameter = '#FFCFA8'
+      Operator = '#B7B7B7'
+      Variable = '#99FFE4'
+      String = '#99FFE4'
+      Number = '#FFC799'
+      Type = '#FFCFA8'
+      Comment = '#505050'
+  }
+  ```
+</Accordion>
+
+## PSFzf Integration
+
+PSFzf brings fuzzy finding capabilities directly into PowerShell with deep integration for command history and file navigation.
+
+### Configuration
+
+Add to `conf.d/30-tools.ps1`:
+
+```powershell
+# --- PSFzf Integration ---
+if (Get-Module -ListAvailable -Name PSFzf) {
+    Import-Module PSFzf
+    
+    # Set keybindings
+    Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+    
+    # Enable Alt+C for directory navigation
+    Set-PSReadLineKeyHandler -Key Alt+c -ScriptBlock {
+        $result = fd --type d --hidden --follow --exclude .git | fzf
+        if ($result) {
+            Set-Location $result
+            [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+        }
+    }
+}
+```
+
+### Key Bindings
+
+| Keybinding | Function | Description |
+|------------|----------|-------------|
+| `Ctrl+R` | History Search | Fuzzy search through command history |
+| `Ctrl+T` | File Picker | Select files with preview |
+| `Alt+C` | Directory Picker | Navigate to directories |
+
+### Advanced Options
+
+<Tabs>
+  <Tab title="With Preview">
+    ```powershell
+    # File preview with bat
+    $env:FZF_CTRL_T_OPTS = "--preview 'bat --style=numbers --color=always --line-range :300 {}'"
+    
+    # Directory preview with eza
+    $env:FZF_ALT_C_OPTS = "--preview 'eza --tree --level=2 --icons --color=always {}'"
+    ```
+  </Tab>
+  
+  <Tab title="Without Preview">
+    ```powershell
+    # Minimal configuration without previews
+    Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+    ```
+  </Tab>
+</Tabs>
+
+## Terminal-Icons
+
+Terminal-Icons adds file and folder icons to directory listings, making it easier to identify file types at a glance.
+
+### Setup
+
+Add to `conf.d/00-init.ps1`:
+
+```powershell
+# --- Terminal Icons ---
+if (Get-Module -ListAvailable -Name Terminal-Icons) {
+    Import-Module Terminal-Icons
+}
+```
+
+<Note>
+  Terminal-Icons requires a [Nerd Font](https://www.nerdfonts.com/) to display icons correctly. Install JetBrains Mono Nerd Font with:
+  
+  ```powershell
+  scoop install nerd-fonts/JetBrainsMono-NF
+  ```
+</Note>
+
+### Icon Customization
+
+<Accordion title="Custom Icon Themes">
+  You can customize which icons appear for specific file types:
+  
+  ```powershell
+  # Get current theme
+  $theme = Get-TerminalIconsTheme
+  
+  # Modify specific file type
+  $theme.Types.Directories['.git'].Icon = ''
+  
+  # Apply custom theme
+  Set-TerminalIconsTheme -ColorTheme $theme
+  ```
+</Accordion>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="PSReadLine not working">
+    Ensure you're running PowerShell 7+ and the module is up to date:
+    
+    ```powershell
+    $PSVersionTable.PSVersion
+    Update-Module PSReadLine -Force
+    ```
+  </Accordion>
+  
+  <Accordion title="Icons not displaying">
+    1. Install a Nerd Font: `scoop install nerd-fonts/JetBrainsMono-NF`
+    2. Configure your terminal to use the Nerd Font
+    3. Restart your terminal
+  </Accordion>
+  
+  <Accordion title="Ctrl+R or Ctrl+T not working">
+    Verify PSFzf is loaded and fzf is installed:
+    
+    ```powershell
+    Get-Module PSFzf
+    Get-Command fzf
+    ```
+    
+    If missing, reinstall:
+    ```powershell
+    scoop install fzf
+    Install-Module PSFzf -Force
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+- [CLI Tools Configuration](/configuration/cli-tools) - Configure bat, eza, fzf, and more
+- [Oh My Posh Setup](/configuration/oh-my-posh) - Customize your prompt
+- [Vesper Theme](/configuration/vesper-theme) - Complete color scheme reference

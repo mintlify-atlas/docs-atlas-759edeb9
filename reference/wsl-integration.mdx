@@ -1,0 +1,356 @@
+---
+title: WSL Integration
+description: Helper functions for seamless Windows Subsystem for Linux integration
+---
+
+This page documents WSL integration functions that enable seamless interaction between PowerShell and WSL environments.
+
+## Quick Access Functions
+
+### Enter-WSL / wsl
+
+Enter the default WSL distribution.
+
+```powershell
+function Enter-WSL {
+    <#
+    .SYNOPSIS
+    Enter WSL (default distribution)
+    .EXAMPLE
+    wsl
+    #>
+    wsl.exe
+}
+```
+
+**Usage:**
+```powershell
+# Enter WSL
+wsl
+
+# Returns you to your WSL home directory
+# Type 'exit' to return to PowerShell
+```
+
+### wsl-here
+
+Open the current Windows directory in WSL.
+
+```powershell
+function wsl-here {
+    <#
+    .SYNOPSIS
+    Open current Windows directory in WSL
+    .EXAMPLE
+    wsl-here
+    #>
+    $wslPath = (Get-Location).Path -replace '\\', '/' -replace '^(\w):', { '/mnt/' + $_.Groups[1].Value.ToLower() }
+    wsl.exe --cd $wslPath
+}
+```
+
+**Usage:**
+```powershell
+# Navigate to a Windows directory
+cd C:\Users\YourName\Projects\myapp
+
+# Open same directory in WSL
+wsl-here
+
+# You're now in /mnt/c/Users/YourName/Projects/myapp
+```
+
+<Note>
+Windows paths are automatically converted to WSL mount paths (e.g., `C:\Users` becomes `/mnt/c/Users`).
+</Note>
+
+## File Transfer Functions
+
+### Copy-ToWSL
+
+Copy files from Windows to WSL.
+
+```powershell
+function Copy-ToWSL {
+    <#
+    .SYNOPSIS
+    Copy file from Windows to WSL home directory
+    .EXAMPLE
+    Copy-ToWSL myfile.txt
+    Copy-ToWSL myfile.txt ~/projects/
+    #>
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Source,
+        
+        [Parameter(Position=1)]
+        [string]$Destination = "~/"
+    )
+    
+    $wslSource = (Resolve-Path $Source).Path -replace '\\', '/' -replace '^(\w):', { '/mnt/' + $_.Groups[1].Value.ToLower() }
+    wsl.exe cp "$wslSource" "$Destination"
+}
+```
+
+**Usage:**
+```powershell
+# Copy file to WSL home directory
+Copy-ToWSL config.json
+
+# Copy to specific WSL path
+Copy-ToWSL script.sh ~/bin/
+
+# Copy with wildcard
+Copy-ToWSL *.txt ~/documents/
+```
+
+### Copy-FromWSL
+
+Copy files from WSL to Windows.
+
+```powershell
+function Copy-FromWSL {
+    <#
+    .SYNOPSIS
+    Copy file from WSL to current Windows directory
+    .EXAMPLE
+    Copy-FromWSL ~/myfile.txt
+    Copy-FromWSL ~/myfile.txt C:\Users\me\Desktop\
+    #>
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Source,
+        
+        [Parameter(Position=1)]
+        [string]$Destination = "."
+    )
+    
+    $winDest = (Resolve-Path $Destination).Path -replace '\\', '/' -replace '^(\w):', { '/mnt/' + $_.Groups[1].Value.ToLower() }
+    wsl.exe cp "$Source" "$winDest"
+}
+```
+
+**Usage:**
+```powershell
+# Copy from WSL home to current directory
+Copy-FromWSL ~/.bashrc
+
+# Copy to specific Windows path
+Copy-FromWSL ~/script.sh C:\Users\YourName\Desktop\
+
+# Copy entire directory
+Copy-FromWSL -r ~/projects/myapp .
+```
+
+<Warning>
+Ensure WSL paths use Linux-style forward slashes (`/`) and Windows paths use backslashes (`\`).
+</Warning>
+
+## Command Execution
+
+### Invoke-WSL / wslrun
+
+Run commands in WSL and return to PowerShell.
+
+```powershell
+function Invoke-WSL {
+    <#
+    .SYNOPSIS
+    Run a command in WSL and return to PowerShell
+    .EXAMPLE
+    wslrun 'ls -la'
+    wslrun 'cat ~/.bashrc'
+    #>
+    param(
+        [Parameter(Mandatory=$true, Position=0, ValueFromRemainingArguments)]
+        [string[]]$Command
+    )
+    
+    wsl.exe -e bash -c ($Command -join ' ')
+}
+```
+
+**Usage:**
+```powershell
+# Run single command
+wslrun 'ls -la'
+
+# Run command with pipes
+wslrun 'cat ~/.bashrc | grep alias'
+
+# Run complex commands
+wslrun 'find . -name "*.js" | wc -l'
+
+# Execute script
+wslrun './build.sh'
+```
+
+## Common Workflows
+
+### Development Workflow
+
+```powershell
+# Work on project in Windows
+cd C:\Projects\webapp
+
+# Open same directory in WSL for Linux tools
+wsl-here
+
+# Back in PowerShell, run WSL commands
+wslrun 'npm install'
+wslrun 'npm run build'
+```
+
+### Configuration Sync
+
+```powershell
+# Copy Windows config to WSL
+Copy-ToWSL .gitconfig ~/
+Copy-ToWSL .npmrc ~/
+
+# Copy WSL config to Windows for backup
+Copy-FromWSL ~/.bashrc C:\Backup\
+Copy-FromWSL ~/.zshrc C:\Backup\
+```
+
+### Script Execution
+
+```powershell
+# Run Linux build script from Windows
+wslrun 'cd /mnt/c/Projects/myapp && ./build.sh'
+
+# Check Linux environment
+wslrun 'uname -a'
+wslrun 'which node'
+wslrun 'node --version'
+```
+
+## Path Conversion
+
+Understanding path conversion is key to WSL integration:
+
+### Windows to WSL Paths
+
+| Windows Path | WSL Path |
+|--------------|----------|
+| `C:\Users\Name` | `/mnt/c/Users/Name` |
+| `D:\Projects` | `/mnt/d/Projects` |
+| `E:\Data\files` | `/mnt/e/Data/files` |
+
+### WSL to Windows Paths
+
+| WSL Path | Windows Path |
+|----------|-------------|
+| `/mnt/c/Users/Name` | `C:\Users\Name` |
+| `~/documents` | `/home/username/documents` |
+| `/etc/hosts` | `\\wsl$\Ubuntu\etc\hosts` |
+
+<Note>
+Access WSL filesystem from Windows using `\\wsl$\<distro-name>\` network path.
+</Note>
+
+## Practical Examples
+
+### Using Linux Tools
+
+```powershell
+# Use grep (better than Windows findstr)
+wslrun 'grep -r "function" *.js'
+
+# Use sed for text processing
+wslrun 'sed -i "s/old/new/g" file.txt'
+
+# Use awk for data processing
+wslrun 'cat data.csv | awk -F"," "{print $1}"'
+```
+
+### Build Tools
+
+```powershell
+# Run make commands
+wslrun 'make clean'
+wslrun 'make build'
+
+# Run Docker in WSL
+wslrun 'docker ps'
+wslrun 'docker-compose up -d'
+
+# Run Python/Node in WSL environment
+wslrun 'python3 script.py'
+wslrun 'node app.js'
+```
+
+### File Operations
+
+```powershell
+# Create symlink in WSL
+wslrun 'ln -s /mnt/c/Projects/config ~/.config/myapp'
+
+# Change permissions
+wslrun 'chmod +x script.sh'
+wslrun 'chown user:user file.txt'
+
+# Check disk usage
+wslrun 'du -sh *'
+wslrun 'df -h'
+```
+
+## Troubleshooting
+
+### WSL Not Found
+
+```powershell
+# Check if WSL is installed
+wsl --list --verbose
+
+# Install WSL
+wsl --install
+
+# Set default distribution
+wsl --set-default Ubuntu
+```
+
+### Path Issues
+
+```powershell
+# If paths don't resolve, check current location
+Get-Location
+
+# Use absolute paths
+Copy-ToWSL C:\Users\Name\file.txt ~/
+
+# Verify WSL can access Windows paths
+wslrun 'ls /mnt/c/Users'
+```
+
+### Permission Issues
+
+```powershell
+# Run WSL as root if needed
+wsl -u root -e bash -c 'command'
+
+# Check file permissions in WSL
+wslrun 'ls -la /path/to/file'
+```
+
+<Warning>
+Be cautious when running commands as root. Always verify the command before execution.
+</Warning>
+
+## Tips & Best Practices
+
+1. **Use wsl-here for development**: When working on projects, use `wsl-here` to seamlessly switch between Windows and Linux tools.
+
+2. **Keep scripts in WSL**: Store build scripts and Linux-specific tools in your WSL home directory for faster access.
+
+3. **Mount Windows drives**: All Windows drives are automatically mounted at `/mnt/<drive-letter>` in WSL.
+
+4. **Performance**: For better I/O performance, keep files in WSL filesystem rather than accessing through `/mnt/c`.
+
+5. **Line endings**: Be aware of CRLF (Windows) vs LF (Linux) line endings when sharing files.
+
+```powershell
+# Convert line endings in WSL
+wslrun 'dos2unix file.txt'  # Windows to Linux
+wslrun 'unix2dos file.txt'  # Linux to Windows
+```

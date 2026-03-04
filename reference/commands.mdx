@@ -1,0 +1,138 @@
+---
+title: Command Reference
+description: Complete reference of all custom commands and aliases
+---
+
+This page provides a comprehensive reference of all custom commands, aliases, and functions available in the Windows 11 PowerShell development environment.
+
+## File & Directory Operations
+
+| Command | Description | Example |
+|---------|-------------|----------|
+| `ls` | List files with icons (eza) | `ls -la` |
+| `ll` | Long list with git status | `ll` |
+| `la` | Long list including hidden files | `la` |
+| `lt` | Tree view (2 levels) | `lt` |
+| `lta` | Tree view with hidden files | `lta` |
+| `cat` | View file with syntax highlighting (bat) | `cat file.txt` |
+| `cd` | Smart directory navigation (zoxide) | `cd projects` |
+| `mkcd` | Create directory and enter it | `mkcd new-project` |
+| `touch` | Create empty file | `touch file.txt` |
+| `which` | Find command location | `which git` |
+
+<Note>
+The `ls` and `cat` commands are enhanced replacements that use `eza` and `bat` respectively, providing better formatting and syntax highlighting.
+</Note>
+
+## Navigation Shortcuts
+
+| Command | Description | Example |
+|---------|-------------|----------|
+| `~` | Go to home directory | `~` |
+| `..` | Go up one level | `..` |
+| `...` | Go up two levels | `...` |
+| `....` | Go up three levels | `....` |
+| `-` | Go to previous directory | `-` |
+| `dev` | Go to ~/dev | `dev` |
+| `desk` | Go to ~/Desktop | `desk` |
+| `docs` | Go to ~/Documents | `docs` |
+| `dl` | Go to ~/Downloads | `dl` |
+| `conf` | Go to ~/.config | `conf` |
+| `dotfiles` | Go to ~/.config | `dotfiles` |
+
+## Search & Find
+
+| Command | Description | Example |
+|---------|-------------|----------|
+| `rfv` | Interactive ripgrep + fzf search | `rfv "TODO"` |
+
+### Search Examples
+
+```powershell
+# Search for function definitions
+rfv "function"
+
+# Search in Python files only
+rfv "TODO" --type py
+
+# Search with case sensitivity
+rfv "MyClass" --case-sensitive
+```
+
+<Note>
+The `rfv` command combines ripgrep and fzf to provide interactive search with live preview. Selected files open in your configured editor.
+</Note>
+
+## Utilities
+
+| Command | Description | Example |
+|---------|-------------|----------|
+| `jqc` | Parse JSON from clipboard | `jqc .name` |
+| `extract` | Extract any archive format | `extract file.zip` |
+| `unpack` | Extract archive (alias) | `unpack file.tar.gz` |
+| `backup` | Create timestamped backup | `backup config.json` |
+| `bak` | Create backup (alias) | `bak myproject` |
+| `reload` | Reload PowerShell profile | `reload` |
+| `restart` | Restart PowerShell process | `restart` |
+
+### Archive Extraction
+
+The `extract` command supports multiple formats:
+
+| Format | Extensions |
+|--------|------------|
+| ZIP | `.zip` |
+| Gzip Tar | `.tar.gz`, `.tgz` |
+| Bzip2 Tar | `.tar.bz2`, `.tbz`, `.tbz2` |
+| XZ Tar | `.tar.xz`, `.txz` |
+| Plain Tar | `.tar` |
+| 7-Zip | `.7z` |
+| RAR | `.rar` |
+
+### Backup Examples
+
+```powershell
+# Backup a file
+backup config.json
+# Creates: config_2025-01-24_141530.json
+
+# Backup a directory
+backup myproject
+# Creates: myproject_2025-01-24_141530/
+
+# Backup to specific location
+backup config.json -Destination D:\Backups
+```
+
+## System & Process
+
+| Command | Description | Example |
+|---------|-------------|----------|
+| `top` | System monitor (btop) | `top` |
+| `htop` | System monitor (btop) | `htop` |
+
+## HTTP Client (HTTPie)
+
+| Command | Description | Example |
+|---------|-------------|----------|
+| `hget` | HTTP GET request | `hget https://api.example.com` |
+| `hpost` | HTTP POST request | `hpost https://api.example.com data=value` |
+| `hput` | HTTP PUT request | `hput https://api.example.com` |
+| `hdel` | HTTP DELETE request | `hdel https://api.example.com/1` |
+
+### HTTPie Examples
+
+```powershell
+# GET request with headers
+hget https://api.github.com/users/octocat
+
+# POST JSON data
+hpost https://api.example.com/users name=John email=john@example.com
+
+# PUT with authentication
+hput https://api.example.com/resource/1 Authorization:"Bearer token" data=value
+```
+
+<Warning>
+HTTPie commands automatically format JSON responses and colorize output. For raw output, use the `--print=b` flag.
+</Warning>

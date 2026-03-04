@@ -1,0 +1,306 @@
+---
+title: Git Command Aliases
+description: Quick reference for all Git shortcuts and aliases
+---
+
+This page documents all Git command aliases available in the PowerShell environment. These aliases are defined in `conf.d/20-aliases.ps1`.
+
+## Basic Git Aliases
+
+| Alias | Full Command | Description |
+|-------|--------------|-------------|
+| `g` | `git` | Git shorthand for any command |
+| `gs` | `git status` | Show working tree status |
+| `ga` | `git add` | Add files to staging area |
+| `gaa` | `git add --all` | Add all changed files |
+| `gc` | `git commit` | Commit staged changes |
+| `gcm` | `git commit -m` | Commit with message |
+
+### Usage Examples
+
+```powershell
+# Check status
+gs
+
+# Add specific file
+ga README.md
+
+# Add all changes
+gaa
+
+# Commit with message
+gcm "feat: add new feature"
+
+# Use g for any git command
+g remote -v
+g log --oneline
+```
+
+## Branch & Navigation
+
+| Alias | Full Command | Description |
+|-------|--------------|-------------|
+| `gb` | `git branch` | List, create, or delete branches |
+| `gco` | `git checkout` | Switch branches or restore files |
+| `gl` | `git log --oneline --graph` | Show commit history as graph |
+
+### Branch Examples
+
+```powershell
+# List all branches
+gb
+
+# List all branches including remotes
+gb -a
+
+# Create new branch
+gb feature/new-feature
+
+# Switch to branch
+gco main
+gco feature/new-feature
+
+# Create and switch to new branch
+gco -b feature/experimental
+
+# View commit history
+gl
+gl -10  # Last 10 commits
+```
+
+## Push & Pull
+
+| Alias | Full Command | Description |
+|-------|--------------|-------------|
+| `gp` | `git push` | Push commits to remote |
+| `gpl` | `git pull` | Fetch and merge from remote |
+
+### Remote Examples
+
+```powershell
+# Push to current branch
+gp
+
+# Push and set upstream
+gp -u origin main
+
+# Pull latest changes
+gpl
+
+# Pull with rebase
+gpl --rebase
+```
+
+## Diff Commands
+
+| Alias | Full Command | Description |
+|-------|--------------|-------------|
+| `gd` | `git diff` | Show unstaged changes |
+| `gds` | `git diff --staged` | Show staged changes |
+
+### Diff Examples
+
+```powershell
+# View unstaged changes
+gd
+
+# View changes in specific file
+gd README.md
+
+# View staged changes (what will be committed)
+gds
+
+# Compare branches
+g diff main..feature/branch
+```
+
+<Note>
+Diff output is enhanced with `delta` pager for syntax highlighting and side-by-side diffs.
+</Note>
+
+## Stash Commands
+
+| Alias | Full Command | Description |
+|-------|--------------|-------------|
+| `gst` | `git stash` | Stash current changes |
+| `gstp` | `git stash pop` | Apply and remove latest stash |
+
+### Stash Examples
+
+```powershell
+# Stash all changes
+gst
+
+# Stash with message
+gst save "WIP: working on feature"
+
+# List stashes
+g stash list
+
+# Apply latest stash
+gstp
+
+# Apply specific stash
+g stash apply stash@{1}
+```
+
+## Lazygit Integration
+
+| Alias | Description |
+|-------|-------------|
+| `lg` | Launch lazygit TUI |
+
+### Lazygit Features
+
+```powershell
+# Open lazygit in current repository
+lg
+```
+
+**Lazygit provides:**
+- Interactive staging and committing
+- Branch management with visual tree
+- Merge conflict resolution
+- Stash management
+- Rebase and cherry-pick
+- Commit amending and squashing
+
+<Warning>
+Lazygit is a terminal UI application. Ensure your terminal supports proper rendering (WezTerm or Windows Terminal recommended).
+</Warning>
+
+## Common Workflows
+
+### Quick Commit Workflow
+
+```powershell
+# Check what changed
+gs
+
+# Add all changes
+gaa
+
+# Commit with message
+gcm "fix: resolve issue with login"
+
+# Push to remote
+gp
+```
+
+### Feature Branch Workflow
+
+```powershell
+# Create and switch to feature branch
+gco -b feature/new-feature
+
+# Make changes and commit
+gaa
+gcm "feat: implement new feature"
+
+# Push feature branch
+gp -u origin feature/new-feature
+
+# Switch back to main
+gco main
+
+# Pull latest changes
+gpl
+```
+
+### Quick Fix Workflow
+
+```powershell
+# Stash current work
+gst
+
+# Switch to main and pull
+gco main
+gpl
+
+# Create hotfix branch
+gco -b hotfix/critical-bug
+
+# Make fix and commit
+gaa
+gcm "fix: critical security patch"
+
+# Push and switch back
+gp -u origin hotfix/critical-bug
+gco main
+
+# Restore stashed work
+gstp
+```
+
+## Advanced Usage
+
+### Combining with Native Git
+
+```powershell
+# Use aliases for common commands
+gs
+ga .
+gcm "update documentation"
+
+# Use full git for complex operations
+g rebase -i HEAD~3
+g cherry-pick abc123
+g reflog
+```
+
+### Passing Arguments
+
+All aliases support passing additional arguments:
+
+```powershell
+# Add with patch mode
+ga -p
+
+# Commit with amend
+gc --amend
+
+# Push force (use with caution)
+gp --force-with-lease
+
+# Status with short format
+gs -s
+
+# Log with specific format
+gl --since="2 weeks ago" --author="John"
+```
+
+## Git Configuration
+
+The environment includes automatic git configuration enhancements:
+
+### Delta Pager
+
+```powershell
+# Delta is automatically set as the git pager
+$env:GIT_PAGER = "delta"
+```
+
+**Delta features:**
+- Syntax highlighting
+- Side-by-side diffs
+- Line numbers
+- Git blame integration
+
+### Checking Configuration
+
+```powershell
+# View git config
+g config --list
+
+# View specific setting
+g config user.name
+g config user.email
+
+# Set user info
+g config --global user.name "Your Name"
+g config --global user.email "your.email@example.com"
+```
+
+<Note>
+For a visual Git interface, use `lg` to launch lazygit, which provides an intuitive TUI for all Git operations.
+</Note>

@@ -1,0 +1,177 @@
+---
+title: Keyboard Shortcuts
+description: Essential keyboard shortcuts for efficient PowerShell navigation
+---
+
+This page lists all keyboard shortcuts available in the PowerShell environment, including FZF integrations and PSReadLine enhancements.
+
+## FZF Interactive Shortcuts
+
+These shortcuts provide fuzzy-finding capabilities powered by FZF with live previews.
+
+### Ctrl+R - Command History Search
+
+Search through your command history interactively.
+
+```powershell
+# Press Ctrl+R and start typing to search
+# Navigate with arrow keys
+# Press Enter to execute the selected command
+```
+
+**Features:**
+- Fuzzy search across entire command history
+- Shows up to 10,000 recent commands
+- Real-time filtering as you type
+- Vesper theme color scheme
+
+### Ctrl+T - File Picker
+
+Interactively select files with live preview.
+
+```powershell
+# Press Ctrl+T to open file picker
+# Type to filter files
+# Preview shows file contents with bat
+# Press Enter to insert file path
+```
+
+**Features:**
+- Searches all files recursively using `fd`
+- Excludes `.git` directories automatically
+- Includes hidden files
+- Preview shows syntax-highlighted content (first 300 lines)
+
+<Note>
+The file picker uses `fd` for fast file discovery and `bat` for syntax-highlighted previews.
+</Note>
+
+### Alt+C - Directory Picker
+
+Navigate to directories quickly with preview.
+
+```powershell
+# Press Alt+C to open directory picker
+# Type to filter directories
+# Preview shows directory tree
+# Press Enter to change to selected directory
+```
+
+**Features:**
+- Searches all directories recursively
+- Excludes `.git` directories
+- Preview shows 2-level tree with icons (eza)
+- Changes directory on selection
+
+## FZF Preview Controls
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+/` | Toggle preview pane on/off |
+| `Up/Down` | Navigate results |
+| `Enter` | Select item |
+| `Esc` | Cancel and close FZF |
+
+## PSReadLine Shortcuts
+
+These shortcuts enhance command-line editing and navigation.
+
+### History Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| `Up Arrow` | Search history backward (matches current input) |
+| `Down Arrow` | Search history forward (matches current input) |
+| `Ctrl+R` | Interactive history search (FZF) |
+
+**History Search Behavior:**
+```powershell
+# Type "git" and press Up Arrow
+# Cycles through commands starting with "git"
+# Press Down Arrow to go forward
+```
+
+### Editing Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+D` | Delete character under cursor |
+| `Ctrl+A` | Move to start of line |
+| `Ctrl+E` | Move to end of line |
+| `Ctrl+K` | Delete from cursor to end of line |
+| `Ctrl+U` | Delete from cursor to start of line |
+| `Ctrl+W` | Delete previous word |
+
+### Auto-Completion
+
+| Shortcut | Action |
+|----------|--------|
+| `Tab` | Cycle through completions |
+| `Shift+Tab` | Cycle backwards through completions |
+| `Ctrl+Space` | Show all completions |
+
+<Note>
+Predictive IntelliSense is enabled, showing suggestions from history as you type. Press `Right Arrow` to accept suggestions.
+</Note>
+
+## Terminal Shortcuts
+
+These are standard terminal shortcuts that work in WezTerm and Windows Terminal.
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+C` | Cancel current command |
+| `Ctrl+L` | Clear screen |
+| `Ctrl+D` | Exit PowerShell (if line is empty) |
+
+## Custom Function Shortcuts
+
+| Shortcut | Equivalent Command | Description |
+|----------|-------------------|-------------|
+| `~` | `Set-Location $HOME` | Go to home directory |
+| `..` | `Set-Location ..` | Go up one level |
+| `...` | `Set-Location ..\..\ ` | Go up two levels |
+| `-` | Go to previous directory | Return to last location |
+
+## FZF Vesper Theme
+
+All FZF shortcuts use the Vesper color scheme:
+
+| Element | Color |
+|---------|-------|
+| Background | Dark charcoal (`#101010`) |
+| Selection | Slightly lighter (`#232323`) |
+| Foreground | Muted gray (`#b0b0b0`) |
+| Highlight | Warm orange (`#FFC799`) |
+| Secondary | Gold/amber (`#FFCFA8`) |
+
+<Warning>
+To customize FZF colors, edit the `$env:FZF_DEFAULT_OPTS` variable in `conf.d/30-tools.ps1`.
+</Warning>
+
+## Tips & Tricks
+
+### Combining Shortcuts
+
+```powershell
+# Use Ctrl+T to pick a file, then edit with default editor
+# 1. Press Ctrl+T
+# 2. Select file
+# 3. Type: & $env:EDITOR and the path will be inserted
+
+# Use Alt+C to navigate, then list contents
+# 1. Press Alt+C
+# 2. Select directory
+# 3. Type: ll
+```
+
+### History Search Tips
+
+```powershell
+# Start typing part of a command
+git com
+# Press Up Arrow - cycles through "git commit", "git commit -m", etc.
+
+# For fuzzy search, use Ctrl+R instead
+# Finds commands containing your search anywhere in the line
+```

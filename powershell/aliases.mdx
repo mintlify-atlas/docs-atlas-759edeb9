@@ -1,0 +1,219 @@
+---
+title: Aliases
+description: Git shortcuts, tool aliases, and command abbreviations
+---
+
+## Overview
+
+Aliases are defined in `~/.config/powershell/conf.d/20-aliases.ps1` and provide convenient shortcuts for frequently used commands.
+
+## Git Aliases
+
+Common Git operations shortened to 2-3 characters:
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `g` | `git` | Git base command |
+| `gs` | `git status` | Show working tree status |
+| `ga` | `git add` | Add files to staging |
+| `gaa` | `git add --all` | Stage all changes |
+| `gc` | `git commit` | Create a commit |
+| `gcm` | `git commit -m` | Commit with message |
+| `gp` | `git push` | Push to remote |
+| `gpl` | `git pull` | Pull from remote |
+| `gd` | `git diff` | Show unstaged changes |
+| `gds` | `git diff --staged` | Show staged changes |
+| `gco` | `git checkout` | Switch branches/restore files |
+| `gb` | `git branch` | List/manage branches |
+| `gl` | `git log --oneline --graph` | Pretty log graph |
+| `gst` | `git stash` | Stash changes |
+| `gstp` | `git stash pop` | Apply stashed changes |
+
+### Usage Examples
+
+```powershell Git workflow with aliases
+# Check status
+gs
+
+# Stage and commit
+gaa
+gcm "Add new feature"
+
+# Push to remote
+gp
+
+# View commit history
+gl
+
+# Create and switch to new branch
+gb feature/new-thing
+gco feature/new-thing
+```
+
+### Implementation
+
+```powershell Source: 20-aliases.ps1
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    function g { git $args }
+    function gs { git status $args }
+    function ga { git add $args }
+    function gaa { git add --all $args }
+    function gc { git commit $args }
+    function gcm { git commit -m $args }
+    function gp { git push $args }
+    function gpl { git pull $args }
+    function gd { git diff $args }
+    function gds { git diff --staged $args }
+    function gco { git checkout $args }
+    function gb { git branch $args }
+    function gl { git log --oneline --graph $args }
+    function gst { git stash $args }
+    function gstp { git stash pop $args }
+}
+```
+
+## Lazygit
+
+Quick access to the lazygit TUI:
+
+```powershell
+lg  # Opens lazygit in current repository
+```
+
+```powershell Source: 20-aliases.ps1
+if (Get-Command lazygit -ErrorAction SilentlyContinue) {
+    Set-Alias -Name lg -Value lazygit
+}
+```
+
+## HTTPie Aliases
+
+HTTP method shortcuts for API testing:
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `hget` | `http GET` | HTTP GET request |
+| `hpost` | `http POST` | HTTP POST request |
+| `hput` | `http PUT` | HTTP PUT request |
+| `hdel` | `http DELETE` | HTTP DELETE request |
+
+### Usage Examples
+
+```powershell API testing with HTTPie
+# GET request
+hget https://api.example.com/users
+
+# POST with JSON data
+hpost https://api.example.com/users name=John email=john@example.com
+
+# PUT with authentication
+hput https://api.example.com/users/123 Authorization:"Bearer token" status=active
+
+# DELETE request
+hdel https://api.example.com/users/123
+```
+
+### Implementation
+
+```powershell Source: 20-aliases.ps1
+if (Get-Command http -ErrorAction SilentlyContinue) {
+    function hget { http GET $args }
+    function hpost { http POST $args }
+    function hput { http PUT $args }
+    function hdel { http DELETE $args }
+}
+```
+
+## System Monitor Aliases
+
+Use `btop` as the default system monitor:
+
+```powershell
+top   # Opens btop
+htop  # Opens btop (for Linux muscle memory)
+```
+
+```powershell Source: 20-aliases.ps1
+if (Get-Command btop -ErrorAction SilentlyContinue) {
+    Set-Alias -Name top -Value btop -Option AllScope
+    Set-Alias -Name htop -Value btop -Option AllScope
+}
+```
+
+## Common Utility Aliases
+
+### which
+
+Find command locations (PowerShell equivalent):
+
+```powershell
+which git
+# Output: C:\Program Files\Git\cmd\git.exe
+```
+
+```powershell Source: 20-aliases.ps1
+Set-Alias -Name which -Value Get-Command
+```
+
+### touch
+
+Create empty files (Unix-style):
+
+```powershell
+touch newfile.txt
+touch app.js styles.css README.md
+```
+
+```powershell Source: 20-aliases.ps1
+function touch { 
+    param([string]$Path) 
+    New-Item -ItemType File -Path $Path -Force | Out-Null 
+}
+```
+
+## Modern Tool Integrations
+
+While defined in `30-tools.ps1`, these aliases are worth noting:
+
+### bat (cat replacement)
+
+```powershell
+cat file.txt  # Uses bat with syntax highlighting
+```
+
+### eza (ls replacement)
+
+| Command | Description |
+|---------|-------------|
+| `ls` | List files with icons |
+| `ll` | Long format with git status |
+| `la` | Long format including hidden files |
+| `lt` | Tree view (2 levels) |
+| `lta` | Tree view including hidden files |
+
+### zoxide (cd replacement)
+
+```powershell
+cd projects  # Uses zoxide for smart directory jumping
+```
+
+## Conditional Loading
+
+All aliases check for tool availability before creation:
+
+```powershell Pattern used throughout
+if (Get-Command <tool> -ErrorAction SilentlyContinue) {
+    # Define aliases/functions
+}
+```
+
+This ensures:
+- No errors if a tool isn't installed
+- Profile loads successfully on any machine
+- Easy to see which tools are available
+
+## See Also
+
+- [Profile Structure](/powershell/profile-structure) - How modules are loaded
+- [Functions](/powershell/functions) - Custom function system
+- [Custom Functions](/powershell/custom-functions) - Individual function documentation

@@ -1,0 +1,293 @@
+---
+title: "Development Tools Installation"
+description: "Install essential development tools including Git, Node.js, fonts, and terminal emulators"
+---
+
+This guide covers installing essential development tools for Windows 11, including version control, runtime environments, fonts, and terminal applications.
+
+## Package Managers
+
+<Steps>
+  <Step title="Verify Winget">
+    Winget comes pre-installed on Windows 11. Verify it's available:
+    
+    ```powershell
+    winget --version
+    ```
+    
+    Update winget sources:
+    
+    ```powershell
+    winget source update
+    ```
+  </Step>
+  
+  <Step title="Install Scoop">
+    Scoop is a command-line installer for Windows that simplifies package management.
+    
+    ```powershell
+    # Check if Scoop is already installed
+    if (!(Get-Command scoop -ErrorAction SilentlyContinue)) {
+        # Set execution policy (required for Scoop)
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        
+        # Install Scoop
+        Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+    }
+    ```
+    
+    Verify installation:
+    
+    ```powershell
+    scoop --version
+    ```
+  </Step>
+  
+  <Step title="Add Scoop buckets">
+    Add required buckets for additional applications:
+    
+    ```powershell
+    scoop bucket add extras
+    scoop bucket add nerd-fonts
+    ```
+    
+    Update Scoop:
+    
+    ```powershell
+    scoop update
+    ```
+  </Step>
+</Steps>
+
+## Git Version Control
+
+<Steps>
+  <Step title="Install Git">
+    Download and install Git from the [official website](https://git-scm.com/downloads/win).
+    
+    Or install via Scoop:
+    
+    ```powershell
+    scoop install git
+    ```
+  </Step>
+  
+  <Step title="Verify Git installation">
+    ```powershell
+    git --version
+    ```
+  </Step>
+  
+  <Step title="Configure Git">
+    Set your name and email:
+    
+    ```powershell
+    git config --global user.name "Your Name"
+    git config --global user.email "your.email@example.com"
+    ```
+  </Step>
+</Steps>
+
+## Node.js Runtime
+
+<Steps>
+  <Step title="Install Node.js">
+    Download and install Node.js from the [official website](https://nodejs.org/en/download).
+    
+    Or install via Scoop:
+    
+    ```powershell
+    scoop install nodejs
+    ```
+  </Step>
+  
+  <Step title="Verify Node.js installation">
+    ```powershell
+    node --version
+    npm --version
+    ```
+  </Step>
+</Steps>
+
+## Fonts
+
+<Steps>
+  <Step title="Install JetBrainsMono Nerd Font">
+    Nerd Fonts include icons and glyphs essential for modern terminal applications.
+    
+    Install via Scoop:
+    
+    ```powershell
+    scoop install nerd-fonts/JetBrainsMono-NF
+    ```
+    
+    Or download from [winstall.app](https://winstall.app/apps/DEVCOM.JetBrainsMonoNerdFont).
+  </Step>
+  
+  <Step title="Verify font installation">
+    The font should now be available in your system font list. You can select it in your terminal emulator settings.
+    
+    <Note>
+      You'll configure your terminal to use this font in the next step.
+    </Note>
+  </Step>
+</Steps>
+
+## Terminal Emulator (WezTerm)
+
+<Steps>
+  <Step title="Install WezTerm">
+    WezTerm is a GPU-accelerated terminal emulator with excellent font rendering.
+    
+    Install via Winget:
+    
+    ```powershell
+    winget install wez.wezterm
+    ```
+    
+    Or via Scoop:
+    
+    ```powershell
+    scoop install wezterm
+    ```
+  </Step>
+  
+  <Step title="Verify WezTerm installation">
+    ```powershell
+    wezterm --version
+    ```
+  </Step>
+  
+  <Step title="Create WezTerm config directory">
+    ```powershell
+    New-Item -ItemType Directory -Path "$HOME\.config\wezterm" -Force
+    ```
+    
+    <Note>
+      WezTerm configuration is stored in `$HOME\.config\wezterm\wezterm.lua`. You'll need to configure it to use the JetBrainsMono Nerd Font:
+      
+      ```lua
+      config.font = wezterm.font("JetBrainsMono Nerd Font")
+      ```
+    </Note>
+  </Step>
+</Steps>
+
+## Oh My Posh (Prompt Theme Engine)
+
+<Steps>
+  <Step title="Install Oh My Posh">
+    Oh My Posh provides beautiful, customizable prompts with git status and more.
+    
+    Install via Winget:
+    
+    ```powershell
+    winget install JanDeDobbeleer.OhMyPosh -s winget
+    ```
+    
+    Or via Scoop:
+    
+    ```powershell
+    scoop install oh-my-posh
+    ```
+  </Step>
+  
+  <Step title="Verify Oh My Posh installation">
+    ```powershell
+    oh-my-posh --version
+    ```
+    
+    If the command is not found, refresh your PATH:
+    
+    ```powershell
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + 
+                [System.Environment]::GetEnvironmentVariable("PATH", "User")
+    ```
+  </Step>
+  
+  <Step title="Create Oh My Posh config directory">
+    ```powershell
+    New-Item -ItemType Directory -Path "$HOME\.config\oh-my-posh" -Force
+    ```
+    
+    Download or create your theme file:
+    
+    ```powershell
+    curl -o "$HOME\.config\oh-my-posh\heyitsiveen.omp.json" https://raw.githubusercontent.com/vntbln/ubuntu/main/.config/oh-my-posh/heyitsiveen.omp.json
+    ```
+  </Step>
+</Steps>
+
+## CLI Tools
+
+Install essential command-line tools:
+
+```powershell
+# Install core CLI tools via Scoop (fast parallel installation)
+scoop install fzf bat eza zoxide ripgrep fd delta lazygit fastfetch btop jq
+```
+
+<Steps>
+  <Step title="Install individual tools">
+    If you prefer to install tools individually:
+    
+    - **fzf**: Fuzzy finder for command-line ([GitHub](https://junegunn.github.io/fzf/installation/#windows))
+    - **bat**: Better cat with syntax highlighting
+    - **eza**: Modern ls replacement
+    - **zoxide**: Smarter cd command
+    - **ripgrep (rg)**: Fast search tool
+    - **fd**: Fast find alternative ([GitHub](https://github.com/sharkdp/fd?tab=readme-ov-file#on-windows))
+    - **delta**: Better git diff viewer
+    - **lazygit**: Terminal UI for git
+    - **fastfetch**: System information tool
+    - **btop**: Resource monitor
+    - **jq**: JSON processor
+  </Step>
+  
+  <Step title="Verify CLI tools installation">
+    ```powershell
+    # Verify all installations
+    $tools = @('fzf', 'bat', 'eza', 'zoxide', 'rg', 'fd', 'delta', 'lazygit', 'fastfetch', 'btop', 'jq')
+    
+    foreach ($tool in $tools) {
+        if (Get-Command $tool -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] $tool" -ForegroundColor Green
+        } else {
+            Write-Host "[MISSING] $tool" -ForegroundColor Red
+        }
+    }
+    ```
+  </Step>
+</Steps>
+
+## HTTPie
+
+Install HTTPie for making HTTP requests:
+
+```powershell
+winget install HTTPie.HTTPie
+```
+
+Verify installation:
+
+```powershell
+http --version
+```
+
+## Bun Runtime (Optional)
+
+Install Bun, a fast JavaScript runtime:
+
+```powershell
+# Install via PowerShell
+powershell -c "irm bun.sh/install.ps1|iex"
+```
+
+Visit [bun.sh](https://bun.sh/) for more information.
+
+## Next Steps
+
+Now that your development tools are installed:
+
+- Configure [PowerShell modules and settings](/setup/powershell-installation)
+- Set up your PowerShell profile for enhanced functionality

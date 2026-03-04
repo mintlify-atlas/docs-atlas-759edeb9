@@ -1,0 +1,317 @@
+---
+title: "PowerShell Configuration"
+description: "Install and configure PowerShell modules including PSReadLine, PSFzf, and Terminal-Icons"
+---
+
+This guide covers installing essential PowerShell modules and configuring your PowerShell environment for an enhanced command-line experience.
+
+## Set Execution Policy
+
+<Warning>
+  PowerShell's execution policy must be set to allow script execution. This is required for running your profile and modules.
+</Warning>
+
+<Steps>
+  <Step title="Check current execution policy">
+    ```powershell
+    Get-ExecutionPolicy -Scope CurrentUser
+    ```
+  </Step>
+  
+  <Step title="Set execution policy to RemoteSigned">
+    This allows local scripts to run while requiring signed remote scripts:
+    
+    ```powershell
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+    ```
+  </Step>
+  
+  <Step title="Verify the change">
+    ```powershell
+    Get-ExecutionPolicy -Scope CurrentUser
+    ```
+    
+    Should output: `RemoteSigned`
+  </Step>
+</Steps>
+
+<Note>
+  The `RemoteSigned` policy allows you to run scripts you've written locally while protecting against unsigned scripts from the internet.
+</Note>
+
+## Install PowerShell Modules
+
+<Steps>
+  <Step title="Install PSReadLine">
+    PSReadLine provides enhanced command-line editing with features like syntax highlighting and history search.
+    
+    ```powershell
+    Install-Module -Name PSReadLine -Force -SkipPublisherCheck
+    ```
+    
+    <Note>
+      PSReadLine is usually pre-installed, but updating to the latest version ensures you have all recent features.
+    </Note>
+  </Step>
+  
+  <Step title="Install PSFzf">
+    PSFzf integrates the fzf fuzzy finder with PowerShell for interactive history and file search.
+    
+    ```powershell
+    Install-Module -Name PSFzf -Force
+    ```
+    
+    See the [PSFzf GitHub repository](https://github.com/kelleyma49/PSFzf?tab=readme-ov-file#installation) for more details.
+  </Step>
+  
+  <Step title="Install Terminal-Icons">
+    Terminal-Icons adds file and folder icons to your terminal directory listings.
+    
+    ```powershell
+    Install-Module -Name Terminal-Icons -Force
+    ```
+    
+    See the [Terminal-Icons installation guide](https://github.com/devblackops/Terminal-Icons?tab=readme-ov-file#installation) for more information.
+  </Step>
+</Steps>
+
+## Verify Module Installation
+
+Check that all modules are installed correctly:
+
+```powershell
+# List installed modules
+$modules = @('PSReadLine', 'PSFzf', 'Terminal-Icons')
+
+foreach ($module in $modules) {
+    if (Get-Module -ListAvailable -Name $module) {
+        Write-Host "[OK] $module" -ForegroundColor Green
+    } else {
+        Write-Host "[MISSING] $module" -ForegroundColor Red
+    }
+}
+```
+
+## Configure PowerShell Profile
+
+<Steps>
+  <Step title="Create PowerShell configuration directory">
+    ```powershell
+    New-Item -ItemType Directory -Path "$HOME\.config\powershell\conf.d" -Force
+    New-Item -ItemType Directory -Path "$HOME\.config\powershell\functions" -Force
+    ```
+  </Step>
+  
+  <Step title="Set up PowerShell profile path">
+    Create or edit your PowerShell profile to load custom configurations:
+    
+    ```powershell
+    # Create profile if it doesn't exist
+    New-Item -Path $PROFILE -ItemType File -Force
+    ```
+    
+    Open the profile for editing:
+    
+    ```powershell
+    notepad $PROFILE
+    ```
+  </Step>
+  
+  <Step title="Add profile configuration loader">
+    Add the following to your `$PROFILE` file:
+    
+    ```powershell
+    # Load user configuration from .config/powershell
+    . $env:USERPROFILE\.config\powershell\user_profile.ps1
+    ```
+    
+    <Note>
+      This approach keeps your configuration modular and organized in the `.config` directory, similar to Unix-like systems.
+    </Note>
+  </Step>
+</Steps>
+
+## Configure PSReadLine
+
+PSReadLine enhances your command-line editing experience with history search and predictive IntelliSense.
+
+Create a configuration file at `$HOME\.config\powershell\conf.d\00-init.ps1`:
+
+```powershell
+# PSReadLine Configuration
+if (Get-Module -ListAvailable -Name PSReadLine) {
+    Import-Module PSReadLine
+
+    # History search with arrow keys
+    Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+    Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+
+    # Predictive IntelliSense
+    Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+    Set-PSReadLineOption -PredictionViewStyle ListView
+
+    # Better history
+    Set-PSReadLineOption -HistorySearchCursorMovesToEnd
+    Set-PSReadLineOption -MaximumHistoryCount 10000
+    
+    # Colors for predictions
+    Set-PSReadLineOption -Colors @{
+        Prediction = '#505050'
+        InlinePrediction = '#505050'
+    }
+}
+```
+
+<Note>
+  With these settings, you can start typing a command and use the Up/Down arrows to search through your history for matching commands.
+</Note>
+
+## Configure Terminal-Icons
+
+Enable Terminal-Icons in your configuration:
+
+```powershell
+# Terminal Icons Configuration
+if (Get-Module -ListAvailable -Name Terminal-Icons) {
+    Import-Module Terminal-Icons
+}
+```
+
+Add this to your `$HOME\.config\powershell\conf.d\00-init.ps1` file.
+
+## Configure PSFzf
+
+Set up PSFzf for fuzzy finding integration:
+
+Create or add to `$HOME\.config\powershell\conf.d\30-tools.ps1`:
+
+```powershell
+# PSFzf Integration
+if (Get-Module -ListAvailable -Name PSFzf) {
+    Import-Module PSFzf
+    
+    # Set keybindings
+    # Ctrl+T: File picker
+    # Ctrl+R: History search
+    Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+    
+    # Enable Alt+C for directory navigation
+    Set-PSReadLineKeyHandler -Key Alt+c -ScriptBlock {
+        $result = fd --type d --hidden --follow --exclude .git | fzf
+        if ($result) {
+            Set-Location $result
+            [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+        }
+    }
+}
+```
+
+<Note>
+  PSFzf provides keyboard shortcuts:
+  - `Ctrl+R`: Search command history
+  - `Ctrl+T`: Search files in current directory
+  - `Alt+C`: Change to a directory using fuzzy search
+</Note>
+
+## Test Your Configuration
+
+<Steps>
+  <Step title="Reload your PowerShell profile">
+    ```powershell
+    . $PROFILE
+    ```
+    
+    Or simply restart PowerShell.
+  </Step>
+  
+  <Step title="Test PSReadLine history search">
+    Type a partial command and press the Up arrow. You should see matching commands from your history.
+  </Step>
+  
+  <Step title="Test PSFzf keybindings">
+    - Press `Ctrl+R` to open fuzzy history search
+    - Press `Ctrl+T` to open fuzzy file finder
+    - Press `Alt+C` to open fuzzy directory navigator
+  </Step>
+  
+  <Step title="Test Terminal-Icons">
+    ```powershell
+    # List files - you should see icons next to file names
+    Get-ChildItem
+    ```
+  </Step>
+</Steps>
+
+## Verify Complete Installation
+
+Run a comprehensive verification:
+
+```powershell
+# Check execution policy
+Write-Host "Execution Policy: " -NoNewline
+Get-ExecutionPolicy -Scope CurrentUser
+
+# Check modules
+Write-Host "`nPowerShell Modules:" -ForegroundColor Cyan
+$modules = @('PSReadLine', 'PSFzf', 'Terminal-Icons')
+foreach ($module in $modules) {
+    $version = (Get-Module -ListAvailable -Name $module | Select-Object -First 1).Version
+    if ($version) {
+        Write-Host "  [OK] $module (v$version)" -ForegroundColor Green
+    } else {
+        Write-Host "  [MISSING] $module" -ForegroundColor Red
+    }
+}
+
+# Check profile exists
+Write-Host "`nProfile Configuration:" -ForegroundColor Cyan
+if (Test-Path $PROFILE) {
+    Write-Host "  [OK] Profile exists at: $PROFILE" -ForegroundColor Green
+} else {
+    Write-Host "  [WARNING] Profile not found" -ForegroundColor Yellow
+}
+```
+
+## Troubleshooting
+
+### PSFzf Not Working
+
+If PSFzf keybindings don't work:
+
+```powershell
+# Ensure fzf and fd are installed
+Get-Command fzf, fd
+
+# Reinstall PSFzf
+Install-Module PSFzf -Force
+
+# Restart PowerShell
+```
+
+### Icons Not Displaying
+
+If Terminal-Icons aren't showing:
+
+1. Ensure you're using a Nerd Font in your terminal
+2. Configure your terminal (WezTerm, Windows Terminal, etc.) to use JetBrainsMono Nerd Font
+3. Restart your terminal after changing fonts
+
+### Scripts Not Running
+
+If you see "running scripts is disabled" errors:
+
+```powershell
+# Check execution policy
+Get-ExecutionPolicy -List
+
+# Set for current user (doesn't require admin)
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+```
+
+## Next Steps
+
+Your PowerShell environment is now configured with enhanced editing, history search, and visual improvements:
+
+- Explore the [PowerShell profile structure](/powershell/profile-structure) and modular configuration system
+- Configure [CLI tools](/configuration/cli-tools) like bat, eza, zoxide, and fzf
+- Learn about [custom functions](/powershell/custom-functions) and productivity aliases

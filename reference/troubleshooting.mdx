@@ -1,0 +1,437 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for the PowerShell development environment
+---
+
+This page covers common issues you may encounter and their solutions.
+
+## Installation Issues
+
+### Script Execution Policy Error
+
+**Error:**
+```powershell
+File cannot be loaded because running scripts is disabled on this system
+```
+
+**Solution:**
+```powershell
+# Set execution policy for current user
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+
+# Verify the change
+Get-ExecutionPolicy -Scope CurrentUser
+# Should output: RemoteSigned
+```
+
+<Warning>
+Never set execution policy to `Unrestricted` as it allows any script to run, including potentially malicious ones. `RemoteSigned` is the recommended setting.
+</Warning>
+
+### Symlink Creation Fails
+
+**Error:**
+```powershell
+New-Item : Access to the path is denied
+```
+
+**Solution Option 1 - Enable Developer Mode (Recommended):**
+1. Open Windows Settings
+2. Go to Privacy & Security > For Developers
+3. Enable "Developer Mode"
+4. Retry creating the symlink
+
+**Solution Option 2 - Run as Administrator:**
+```powershell
+# Right-click PowerShell and select "Run as Administrator"
+# Then create the symlink
+New-Item -ItemType SymbolicLink -Path $PROFILE -Target "$HOME\.config\powershell\Microsoft.PowerShell_profile.ps1"
+```
+
+### Oh My Posh Not Found
+
+**Error:**
+```powershell
+oh-my-posh : The term 'oh-my-posh' is not recognized
+```
+
+**Solution:**
+```powershell
+# Refresh PATH environment variable
+$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + 
+            [System.Environment]::GetEnvironmentVariable("PATH", "User")
+
+# Verify oh-my-posh is installed
+oh-my-posh --version
+
+# If still not found, reinstall
+winget install JanDeDobbeleer.OhMyPosh -s winget
+
+# Restart PowerShell completely
+```
+
+## Display Issues
+
+### Icons Not Displaying Correctly
+
+**Symptoms:**
+- Square boxes instead of icons
+- Missing glyphs in prompt
+- Broken symbols in file listings
+
+**Solution:**
+```powershell
+# Install a Nerd Font
+scoop install nerd-fonts/JetBrainsMono-NF
+
+# Configure your terminal to use the Nerd Font
+# For WezTerm, edit ~/.config/wezterm/wezterm.lua:
+# config.font = wezterm.font("JetBrainsMono Nerd Font")
+
+# For Windows Terminal, edit settings.json:
+# "font": { "face": "JetBrainsMono Nerd Font" }
+```
+
+**Available Nerd Fonts:**
+- JetBrainsMono Nerd Font
+- FiraCode Nerd Font
+- CascadiaCode Nerd Font
+- Hack Nerd Font
+
+<Note>
+After installing a Nerd Font, you must configure your terminal application to use it. A terminal restart is required.
+</Note>
+
+### Colors Not Displaying
+
+**Solution:**
+```powershell
+# Ensure your terminal supports true color
+# WezTerm and Windows Terminal support this by default
+
+# Test color support
+$PSStyle.Formatting.Error
+
+# If colors are still wrong, check terminal theme
+# For Vesper theme, ensure FZF_DEFAULT_OPTS is set correctly
+Write-Host $env:FZF_DEFAULT_OPTS
+```
+
+## Module Issues
+
+### PSFzf Not Working
+
+**Symptoms:**
+- Ctrl+R, Ctrl+T, or Alt+C don't work
+- FZF integration missing
+
+**Solution:**
+```powershell
+# Ensure PSFzf module is installed
+Install-Module PSFzf -Force
+
+# Verify fzf.exe is available
+fzf --version
+
+# If fzf is missing, install it
+scoop install fzf
+
+# Reload profile
+reload
+```
+
+### Module Import Errors
+
+**Error:**
+```powershell
+Import-Module : The specified module 'PSReadLine' was not loaded
+```
+
+**Solution:**
+```powershell
+# Update the module
+Install-Module -Name PSReadLine -Force -SkipPublisherCheck
+
+# If that fails, remove and reinstall
+Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue
+Install-Module -Name PSReadLine -Force -SkipPublisherCheck
+
+# Restart PowerShell
+```
+
+## Tool Issues
+
+### Command Not Found
+
+**Error:**
+```powershell
+The term 'bat' is not recognized as a cmdlet, function, script file, or operable program
+```
+
+**Solution:**
+```powershell
+# Check if tool is installed via Scoop
+scoop list | Select-String "bat"
+
+# If not found, install it
+scoop install bat
+
+# Refresh Scoop shims
+scoop reset *
+
+# Verify installation
+Get-Command bat
+```
+
+### Zoxide Not Tracking Directories
+
+**Symptoms:**
+- `z` command doesn't work
+- Directories not being remembered
+
+**Solution:**
+```powershell
+# Verify zoxide is initialized
+# Should see initialization code in conf.d/30-tools.ps1
+
+# Manually initialize (temporary)
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
+
+# Check zoxide database
+z --help
+
+# Add directories manually
+z add C:\Projects
+z add C:\Users\YourName\Documents
+
+# Query database
+z query
+```
+
+## WSL Integration Issues
+
+### WSL Not Available
+
+**Error:**
+```powershell
+wsl : The term 'wsl' is not recognized
+```
+
+**Solution:**
+```powershell
+# Check if WSL is installed
+wsl --list --verbose
+
+# If not installed, install WSL
+wsl --install
+
+# Restart your computer
+
+# Set default distribution
+wsl --set-default Ubuntu
+```
+
+### Path Conversion Issues
+
+**Symptoms:**
+- `wsl-here` doesn't work
+- File copy functions fail
+
+**Solution:**
+```powershell
+# Verify current path
+Get-Location
+
+# Manually test path conversion
+$path = (Get-Location).Path -replace '\\', '/' -replace '^(\w):', { '/mnt/' + $_.Groups[1].Value.ToLower() }
+Write-Host $path
+
+# Expected format: /mnt/c/Users/...
+
+# If conversion fails, use absolute paths
+wslrun 'ls /mnt/c/Users'
+```
+
+## Performance Issues
+
+### Slow Profile Loading
+
+**Symptoms:**
+- PowerShell takes several seconds to start
+- Noticeable delay when opening terminal
+
+**Solution:**
+```powershell
+# Profile with timing
+pwsh -NoProfile -Command "Measure-Command { . $PROFILE }"
+
+# Identify slow modules
+# Edit conf.d/50-functions.ps1 and comment out greeting
+# Comment out Terminal-Icons import in conf.d/00-init.ps1
+
+# Disable Oh My Posh temporarily to test
+# Rename conf.d/60-prompt.ps1 to 60-prompt.ps1.bak
+
+# Use lazy loading for heavy modules
+```
+
+**Optimization tips:**
+1. Disable fastfetch greeting for faster startup
+2. Use lazy loading for infrequently used functions
+3. Minimize number of imported modules
+4. Consider using `--no-profile` for quick tasks
+
+### FZF Preview Lag
+
+**Solution:**
+```powershell
+# Reduce preview size
+$env:FZF_CTRL_T_OPTS = "--preview 'bat --style=numbers --color=always --line-range :100 {}'"
+
+# Disable preview for large directories
+$env:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS -replace '--height 50%', '--height 40%'
+```
+
+## Configuration Issues
+
+### Profile Not Loading
+
+**Solution:**
+```powershell
+# Check profile path
+$PROFILE
+
+# Verify file exists
+Test-Path $PROFILE
+
+# Check if symlink is valid
+Get-Item $PROFILE | Select-Object Target
+
+# If broken, recreate symlink
+Remove-Item $PROFILE -Force
+New-Item -ItemType SymbolicLink -Path $PROFILE -Target "$HOME\.config\powershell\Microsoft.PowerShell_profile.ps1"
+```
+
+### Changes Not Taking Effect
+
+**Solution:**
+```powershell
+# Reload profile
+reload
+
+# If reload doesn't work, check for syntax errors
+pwsh -NoProfile -Command ". '$HOME\.config\powershell\Microsoft.PowerShell_profile.ps1'"
+
+# If errors appear, fix them in the indicated file
+
+# For persistent issues, restart PowerShell completely
+restart
+```
+
+### 99-local.ps1 Ignored
+
+**Solution:**
+```powershell
+# Verify file location
+Test-Path "$HOME\.config\powershell\conf.d\99-local.ps1"
+
+# Check file name (must be .ps1 extension)
+Get-ChildItem "$HOME\.config\powershell\conf.d\" | Select-Object Name
+
+# Verify no syntax errors
+pwsh -NoProfile -File "$HOME\.config\powershell\conf.d\99-local.ps1"
+
+# Reload profile
+reload
+```
+
+## Rollback & Recovery
+
+### Broken Configuration
+
+**If profile is completely broken:**
+
+```powershell
+# Start PowerShell without profile
+pwsh -NoProfile
+
+# Edit the problematic file
+notepad "$HOME\.config\powershell\conf.d\00-init.ps1"
+
+# Or temporarily disable profile
+Rename-Item $PROFILE "$PROFILE.bak"
+
+# Test individual config files
+. "$HOME\.config\powershell\conf.d\00-init.ps1"
+. "$HOME\.config\powershell\conf.d\10-environment.ps1"
+# Continue until you find the broken file
+```
+
+### Restore to Minimal Profile
+
+**Create emergency minimal profile:**
+
+```powershell
+# Start with no profile
+pwsh -NoProfile
+
+# Create minimal safe profile
+Set-Content -Path $PROFILE -Value @'
+# Minimal safe profile
+Write-Host "PowerShell started in safe mode" -ForegroundColor Yellow
+'@
+
+# Restart PowerShell and debug
+```
+
+### Git Restore
+
+```powershell
+# If configuration is in git
+cd "$HOME\.config\powershell"
+
+# View recent changes
+gl -10
+
+# Restore to previous commit
+git reset --hard HEAD~1
+
+# Or restore specific file
+git checkout HEAD~1 -- conf.d/30-tools.ps1
+
+# Reload profile
+reload
+```
+
+## Getting Help
+
+### Diagnostic Information
+
+When reporting issues, gather this information:
+
+```powershell
+# PowerShell version
+$PSVersionTable
+
+# OS version
+[System.Environment]::OSVersion
+
+# Installed modules
+Get-Module -ListAvailable | Select-Object Name, Version
+
+# Tool versions
+fzf --version
+bat --version
+eza --version
+oh-my-posh --version
+
+# Profile path
+$PROFILE
+
+# Execution policy
+Get-ExecutionPolicy -List
+```
+
+<Note>
+For additional help, check the source files in `~/.config/powershell/` and review the original PLAN.md for detailed implementation notes.
+</Note>

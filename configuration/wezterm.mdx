@@ -1,0 +1,319 @@
+---
+title: WezTerm Configuration
+description: Configure WezTerm terminal emulator with the Vesper color scheme and optimal settings
+---
+
+WezTerm is a GPU-accelerated terminal emulator with extensive Lua-based configuration. This guide shows how to configure WezTerm with the Vesper theme and optimized settings for Windows 11.
+
+## Installation
+
+<Tabs>
+  <Tab title="Winget (Recommended)">
+    ```powershell
+    winget install wez.wezterm
+    ```
+  </Tab>
+  
+  <Tab title="Scoop">
+    ```powershell
+    scoop install wezterm
+    ```
+  </Tab>
+</Tabs>
+
+Verify installation:
+
+```powershell
+wezterm --version
+```
+
+## Configuration File
+
+WezTerm uses a Lua configuration file located at `~/.config/wezterm/wezterm.lua`.
+
+Create the configuration directory:
+
+```powershell
+New-Item -ItemType Directory -Path "$HOME\.config\wezterm" -Force
+```
+
+## Complete Configuration
+
+Here's the complete `wezterm.lua` configuration with the Vesper theme:
+
+```lua
+local wezterm = require 'wezterm'
+local config = {}
+
+config.window_close_confirmation = 'NeverPrompt'
+
+--! DEFAULT SHELL
+config.default_domain = 'WSL:Ubuntu-24.04'  -- Or remove for PowerShell default
+-- config.default_prog = {"pwsh"}
+
+--! FONT
+config.font = wezterm.font 'JetBrains Mono'
+
+--! TAB
+config.enable_tab_bar = false
+
+--! WINDOW
+config.window_background_opacity = 0.7
+config.macos_window_background_blur = 20
+
+--! CURSOR
+config.default_cursor_style = 'BlinkingBar'
+
+--! COLOR SCHEME
+config.color_scheme = 'Vesper'
+
+config.color_schemes = {
+  ['Vesper'] = {
+    -- The default text color
+    foreground = '#FFFFFF',
+    -- The default background color
+    background = '#101010',
+
+    -- Cursor colors
+    cursor_bg = '#FFC799',
+    cursor_fg = '#101010',
+    cursor_border = '#FFC799',
+
+    -- Selection colors
+    selection_bg = 'rgba(50% 50% 50% 50%)',
+
+    -- Scrollbar thumb color
+    scrollbar_thumb = 'rgba(50% 50% 50% 50%)',
+
+    -- Split line color
+    split = '#505050',
+
+    -- ANSI colors
+    ansi = {
+      '#101010',  -- black
+      '#F5A191',  -- red
+      '#90B99F',  -- green
+      '#E6B99D',  -- yellow
+      '#ACA1CF',  -- blue
+      '#E29ECA',  -- magenta
+      '#EA83A5',  -- cyan
+      '#A0A0A0',  -- white
+    },
+    brights = {
+      '#7E7E7E',  -- bright black
+      '#FF8080',  -- bright red
+      '#99FFE4',  -- bright green
+      '#FFC799',  -- bright yellow
+      '#B9AEDA',  -- bright blue
+      '#ECAAD6',  -- bright magenta
+      '#F591B2',  -- bright cyan
+      '#FFFFFF',  -- bright white
+    },
+  }
+}
+
+return config
+```
+
+## Configuration Sections
+
+### Font Configuration
+
+<Accordion title="Install Nerd Fonts">
+  Install JetBrains Mono Nerd Font for icon support:
+  
+  ```powershell
+  scoop install nerd-fonts/JetBrainsMono-NF
+  ```
+  
+  Alternative fonts:
+  ```powershell
+  scoop install nerd-fonts/FiraCode-NF
+  scoop install nerd-fonts/CascadiaCode-NF
+  ```
+</Accordion>
+
+```lua
+config.font = wezterm.font 'JetBrains Mono'
+config.font_size = 11.0  -- Optional: adjust size
+```
+
+### Window Settings
+
+<Tabs>
+  <Tab title="With Transparency">
+    ```lua
+    config.window_background_opacity = 0.7
+    config.macos_window_background_blur = 20  -- Also works on Windows 11
+    ```
+  </Tab>
+  
+  <Tab title="Opaque Background">
+    ```lua
+    config.window_background_opacity = 1.0
+    ```
+  </Tab>
+</Tabs>
+
+### Default Shell
+
+<Tabs>
+  <Tab title="PowerShell">
+    ```lua
+    config.default_prog = {"pwsh"}
+    ```
+  </Tab>
+  
+  <Tab title="WSL">
+    ```lua
+    config.default_domain = 'WSL:Ubuntu-24.04'
+    ```
+  </Tab>
+  
+  <Tab title="Command Prompt">
+    ```lua
+    config.default_prog = {"cmd.exe"}
+    ```
+  </Tab>
+</Tabs>
+
+### Cursor Style
+
+```lua
+-- Options: 'BlinkingBar', 'SteadyBar', 'BlinkingBlock', 'SteadyBlock', 'BlinkingUnderline', 'SteadyUnderline'
+config.default_cursor_style = 'BlinkingBar'
+```
+
+### Tab Bar
+
+<Tabs>
+  <Tab title="Hidden">
+    ```lua
+    config.enable_tab_bar = false
+    ```
+  </Tab>
+  
+  <Tab title="Visible">
+    ```lua
+    config.enable_tab_bar = true
+    config.hide_tab_bar_if_only_one_tab = true
+    config.use_fancy_tab_bar = false
+    ```
+  </Tab>
+</Tabs>
+
+## Vesper Color Palette
+
+The Vesper theme uses warm, muted colors optimized for long coding sessions:
+
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Background | `#101010` | Terminal background |
+| Foreground | `#FFFFFF` | Default text |
+| Cursor | `#FFC799` | Cursor and accent |
+| Selection | `rgba(50% 50% 50% 50%)` | Selected text |
+| Split | `#505050` | Pane borders |
+
+### ANSI Colors
+
+<Accordion title="Standard ANSI">
+  | Name | Hex | Usage |
+  |------|-----|-------|
+  | Black | `#101010` | Dark backgrounds |
+  | Red | `#F5A191` | Errors, deletions |
+  | Green | `#90B99F` | Success, additions |
+  | Yellow | `#E6B99D` | Warnings |
+  | Blue | `#ACA1CF` | Information |
+  | Magenta | `#E29ECA` | Special text |
+  | Cyan | `#EA83A5` | Links, highlights |
+  | White | `#A0A0A0` | Normal text |
+</Accordion>
+
+<Accordion title="Bright ANSI">
+  | Name | Hex | Usage |
+  |------|-----|-------|
+  | Bright Black | `#7E7E7E` | Comments |
+  | Bright Red | `#FF8080` | Bold errors |
+  | Bright Green | `#99FFE4` | Strings, success |
+  | Bright Yellow | `#FFC799` | Keywords, highlights |
+  | Bright Blue | `#B9AEDA` | Functions |
+  | Bright Magenta | `#ECAAD6` | Constants |
+  | Bright Cyan | `#F591B2` | Types |
+  | Bright White | `#FFFFFF` | Emphasis |
+</Accordion>
+
+## Advanced Options
+
+<AccordionGroup>
+  <Accordion title="Key Bindings">
+    ```lua
+    config.keys = {
+      -- Split panes
+      { key = 'd', mods = 'CTRL|SHIFT', action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' } },
+      { key = 'D', mods = 'CTRL|SHIFT', action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' } },
+      
+      -- Navigate panes
+      { key = 'h', mods = 'CTRL|SHIFT', action = wezterm.action.ActivatePaneDirection 'Left' },
+      { key = 'l', mods = 'CTRL|SHIFT', action = wezterm.action.ActivatePaneDirection 'Right' },
+      { key = 'k', mods = 'CTRL|SHIFT', action = wezterm.action.ActivatePaneDirection 'Up' },
+      { key = 'j', mods = 'CTRL|SHIFT', action = wezterm.action.ActivatePaneDirection 'Down' },
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="GPU Acceleration">
+    ```lua
+    -- Force GPU usage
+    config.front_end = 'WebGpu'
+    config.webgpu_power_preference = 'HighPerformance'
+    ```
+  </Accordion>
+  
+  <Accordion title="Performance Tuning">
+    ```lua
+    -- Increase scrollback
+    config.scrollback_lines = 10000
+    
+    -- Faster rendering
+    config.max_fps = 120
+    config.animation_fps = 60
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Testing Configuration
+
+After editing `wezterm.lua`, test the configuration:
+
+```powershell
+wezterm --config-file "$HOME\.config\wezterm\wezterm.lua"
+```
+
+WezTerm automatically reloads configuration changes - no restart needed!
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Font not rendering correctly">
+    1. Ensure Nerd Font is installed: `scoop install nerd-fonts/JetBrainsMono-NF`
+    2. Verify font name in config matches installed font exactly
+    3. Restart WezTerm after font installation
+  </Accordion>
+  
+  <Accordion title="Colors not applying">
+    Check for syntax errors in `wezterm.lua`:
+    ```powershell
+    wezterm --config-file "$HOME\.config\wezterm\wezterm.lua" --version
+    ```
+  </Accordion>
+  
+  <Accordion title="Transparency not working on Windows">
+    Ensure you're running Windows 11 with acrylic transparency enabled in system settings.
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+- [Vesper Theme Details](/configuration/vesper-theme) - Complete color palette
+- [PowerShell Modules](/configuration/powershell-modules) - Configure PSReadLine colors
+- [CLI Tools](/configuration/cli-tools) - Configure bat, eza, and fzf with Vesper colors

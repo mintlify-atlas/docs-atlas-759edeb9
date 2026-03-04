@@ -1,0 +1,167 @@
+---
+title: Profile Structure
+description: Understanding the modular PowerShell configuration system
+---
+
+## Overview
+
+The PowerShell configuration uses a modular, directory-based structure inspired by Unix systems. Instead of one monolithic profile file, configuration is split into numbered modules that load in a specific order.
+
+## Entry Point
+
+The main profile file (`Microsoft.PowerShell_profile.ps1`) is intentionally lean:
+
+```powershell Microsoft.PowerShell_profile.ps1
+$ConfigRoot = "$HOME\.config\powershell"
+
+# Source all conf.d files in order
+$confDir = Join-Path $ConfigRoot "conf.d"
+if (Test-Path $confDir) {
+    Get-ChildItem -Path $confDir -Filter "*.ps1" | 
+        Sort-Object Name | 
+        ForEach-Object { 
+            . $_.FullName 
+        }
+}
+```
+
+This approach:
+- Keeps the main profile simple and maintainable
+- Makes it easy to add/remove features
+- Allows for clear organization by category
+- Enables predictable load order through numbering
+
+## Configuration Directory Structure
+
+```
+~/.config/powershell/
+├── Microsoft.PowerShell_profile.ps1  # Entry point
+├── conf.d/                           # Modular configuration
+│   ├── 00-init.ps1                  # Core settings
+│   ├── 10-environment.ps1           # Environment variables
+│   ├── 20-aliases.ps1               # Command aliases
+│   ├── 30-tools.ps1                 # Modern CLI tools
+│   ├── 40-completions.ps1           # Tab completions
+│   ├── 50-functions.ps1             # Function loader
+│   ├── 60-prompt.ps1                # Oh My Posh theme
+│   └── 99-local.ps1                 # Machine-specific overrides
+└── functions/                        # Custom functions
+    ├── mkcd.ps1
+    ├── rfv.ps1
+    ├── backup.ps1
+    └── ...
+```
+
+## Load Order
+
+Files in `conf.d/` are loaded in alphanumeric order using numbered prefixes:
+
+<Steps>
+  <Step title="00-init.ps1">
+    Core PowerShell settings, PSReadLine configuration, Terminal-Icons
+  </Step>
+  
+  <Step title="10-environment.ps1">
+    Environment variables (`$env:EDITOR`, `$env:PATH`), editor fallback chain
+  </Step>
+  
+  <Step title="20-aliases.ps1">
+    Git aliases, lazygit, HTTPie, btop shortcuts
+  </Step>
+  
+  <Step title="30-tools.ps1">
+    Modern tool integrations (bat, eza, zoxide, fzf, ripgrep, delta)
+  </Step>
+  
+  <Step title="40-completions.ps1">
+    Enhanced tab completions for docker, scoop, winget, npm/pnpm/yarn
+  </Step>
+  
+  <Step title="50-functions.ps1">
+    Loads custom functions from `functions/` directory, invokes greeting
+  </Step>
+  
+  <Step title="60-prompt.ps1">
+    Oh My Posh prompt theme configuration
+  </Step>
+  
+  <Step title="99-local.ps1">
+    Machine-specific overrides (gitignored for local customization)
+  </Step>
+</Steps>
+
+## Numbered Prefix Convention
+
+The two-digit prefix determines load order:
+
+| Prefix | Purpose | Examples |
+|--------|---------|----------|
+| `00-XX` | Core initialization | PSReadLine, encoding, error display |
+| `10-XX` | Environment setup | `$env:EDITOR`, `$env:PATH` |
+| `20-XX` | Aliases and shortcuts | Git, tool aliases |
+| `30-XX` | External tool integration | bat, eza, zoxide, fzf |
+| `40-XX` | Completions | docker, scoop, npm |
+| `50-XX` | Functions | Custom function loader |
+| `60-XX` | Prompt customization | Oh My Posh |
+| `99-XX` | Local overrides | Machine-specific config |
+
+## Adding New Modules
+
+To add a new configuration module:
+
+1. Create a new `.ps1` file in `conf.d/`
+2. Choose an appropriate numeric prefix based on dependencies
+3. The file will automatically load on next shell start
+
+```powershell Example: Adding a 25-docker.ps1 module
+# ~/.config/powershell/conf.d/25-docker.ps1
+# Docker-specific aliases and functions
+
+if (Get-Command docker -ErrorAction SilentlyContinue) {
+    function dps { docker ps $args }
+    function dimg { docker images $args }
+    function dlog { docker logs -f $args }
+}
+```
+
+## Local Overrides
+
+The `99-local.ps1` file is gitignored and intended for machine-specific customization:
+
+```powershell ~/.config/powershell/conf.d/99-local.ps1
+# Work proxy settings
+$env:HTTP_PROXY = "http://proxy.work.com:8080"
+$env:HTTPS_PROXY = "http://proxy.work.com:8080"
+
+# Override editor for this machine
+$env:EDITOR = "code"
+
+# Add work tools to PATH
+$env:PATH = "C:\work\tools\bin;$env:PATH"
+```
+
+## Benefits of This Structure
+
+<CardGroup cols={2}>
+  <Card title="Modular" icon="puzzle-piece">
+    Each module has a single responsibility and can be enabled/disabled independently
+  </Card>
+  
+  <Card title="Predictable" icon="arrows-up-down">
+    Numbered prefixes ensure consistent load order across machines
+  </Card>
+  
+  <Card title="Maintainable" icon="wrench">
+    Easy to add, remove, or modify specific features without touching other modules
+  </Card>
+  
+  <Card title="Portable" icon="box">
+    The entire `~/.config/powershell` directory can be versioned and synced
+  </Card>
+</CardGroup>
+
+## See Also
+
+- [Aliases](/powershell/aliases) - Git, tool, and command shortcuts
+- [Functions](/powershell/functions) - Custom function loading system
+- [Custom Functions](/powershell/custom-functions) - Individual function documentation
